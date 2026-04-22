@@ -1,0 +1,5 @@
+flake8>=6.0.0
+mypy>=1.0.0
+build>=1.0.0
+setuptools>=61.0.0
+wheel>=0.40.0
