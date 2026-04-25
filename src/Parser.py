@@ -18,7 +18,7 @@ class Parser:
                     line = line.strip()
                     if not line or line.startswith('#'):
                         continue
-                self._parse_line(line, l_num)
+                    self._parse_line(line, l_num)
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")
 
@@ -32,10 +32,10 @@ class Parser:
                                  f"Invalid nb_drones format")
             self.nb_drones = int(drones[1].strip())
         elif line.startswith("start_hub:"):
-            self.start_hub = self.parse_zone_line(
+            self.start_hub = self._parse_zone_line(
                 line.replace("start_hub:", "").strip())
         elif line.startswith("end_hub:"):
-            self.end_hub = self.parse_zone_line(
+            self.end_hub = self._parse_zone_line(
                 line.replace("end_hub:", "").strip())
         elif line.startswith("hub:"):
             self.hubs.append(self._parse_zone_line(
