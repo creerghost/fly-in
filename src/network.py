@@ -1,8 +1,8 @@
-from typing import Any, List, Dict, Tuple
+from typing import List, Dict, Tuple
 from src.Zone import Zone
 from src.Connection import Connection
 from src.Parser import Parser
-import sys
+
 
 class Network:
     """
@@ -11,15 +11,6 @@ class Network:
     """
     def __init__(self, parser: Parser):
         self.parser = parser
-        try:
-            parser.parse()
-        except ValueError as e:
-            print(f"Error: {e}")
-            sys.exit(1)
-        except FileNotFoundError as e:
-            print(f"Error: {e}")
-            sys.exit(1)
-
         self.zones: Dict[str, Zone] = {}
         self.connections: List[Connection] = []
         self.neighboring_zones: Dict[str, List[Tuple[Zone, Connection]]] = {}

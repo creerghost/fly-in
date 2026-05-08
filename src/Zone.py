@@ -14,7 +14,3 @@ class Zone:
 
     def __repr__(self) -> str:
         return (f"zone name: {self.name}")
-                # f"x: {self.x}, y: {self.y}, "
-                # f"zone type: {self.zone_type}, "
-                # f"color: {self.color}, "
-                # f"max_drones: {self.max_drones}")

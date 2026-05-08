@@ -203,7 +203,7 @@ connection: B-goal
             parser.parse()
 
     def test_dashes_in_names(self):
-        content = """nb_drones: 5\nstart_hub: st-art 0 0\nend_hub: goal 10 10\n"""
+        content = """nb_drones: 5\nstart_hub: st-art 0 0\nend_hub: goal 10 10\n"""  # noqa
         path = self.create_temp_map(content)
         parser = Parser(path)
         with self.assertRaises(ValueError, msg="Should fail on "
