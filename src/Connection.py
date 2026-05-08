@@ -5,3 +5,6 @@ class Connection:
         self.max_capacity = max_link_capacity
 
         self.current_drones: int = 0
+
+    def __repr__(self) -> str:
+        return f"connection name: {self.name1}-{self.name2}"

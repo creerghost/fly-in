@@ -11,3 +11,10 @@ class Zone:
         self.max_drones = max_drones
 
         self.current_drones: int = 0
+
+    def __repr__(self) -> str:
+        return (f"zone name: {self.name}")
+                # f"x: {self.x}, y: {self.y}, "
+                # f"zone type: {self.zone_type}, "
+                # f"color: {self.color}, "
+                # f"max_drones: {self.max_drones}")

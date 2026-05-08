@@ -13,6 +13,8 @@ class Parser:
         self.end_hub: Dict[str, Any] | None = None
         self.hubs: List[Dict[str, Any]] = []
         self.connections: List[Dict[str, Any]] = []
+        self._start_hub_count = 0
+        self._end_hub_count = 0
 
     def parse(self) -> None:
         try:
@@ -22,10 +24,11 @@ class Parser:
                     if not line or line.startswith('#'):
                         continue
                     self._parse_line(line, l_num)
+            self._validate()
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")
-
-        self._validate()
+        except ValueError as e:
+            raise ValueError(f"Line {l_num}: {e}")
 
     def _parse_line(self, line: str, line_num: int) -> None:
         if line.startswith("nb_drones"):
@@ -35,9 +38,11 @@ class Parser:
                                  f"Invalid nb_drones format")
             self.nb_drones = int(drones[1].strip())
         elif line.startswith("start_hub:"):
+            self._start_hub_count += 1
             self.start_hub = self._parse_zone_line(
                 line.replace("start_hub:", "").strip())
         elif line.startswith("end_hub:"):
+            self._end_hub_count += 1
             self.end_hub = self._parse_zone_line(
                 line.replace("end_hub:", "").strip())
         elif line.startswith("hub:"):
@@ -53,6 +58,8 @@ class Parser:
     def _parse_zone_line(self, line: str) -> Dict[str, Any]:
         parts = line.split("[")
         base_info = parts[0].strip().split()
+        if len(base_info) != 3:
+            raise ValueError("Invalid syntax for zone line")
         data: Dict[str, Any] = {
             "name": base_info[0],
             "x": int(base_info[1]),
@@ -81,8 +88,8 @@ class Parser:
         names = parts[0].strip().split("-")
 
         data: Dict[str, Any] = {
-            "zone1_name": names[0],
-            "zone2_name": names[1],
+            "name1": names[0],
+            "name2": names[1],
             "max_link_capacity": 1
         }
 
@@ -103,11 +110,18 @@ class Parser:
             raise ValueError("Missing start_hub")
         if self.end_hub is None:
             raise ValueError("Missing end_hub")
+        if self._start_hub_count != 1:
+            raise ValueError("Only one start_hub is allowed")
+        if self._end_hub_count != 1:
+            raise ValueError("Only one end_hub is allowed")
 
         zone_names = set()
         valid_types = {"normal", "blocked", "restricted", "priority"}
         all_hubs = [self.start_hub, self.end_hub] + self.hubs
         for hub in all_hubs:
+            if "-" in hub["name"]:
+                raise ValueError(f"Zone name should not contain dashes"
+                                 f": {hub["name"]}")
             if hub["max_drones"] <= 0:
                 raise ValueError("max_drones must be a positive integer")
             if hub["name"] in zone_names:
@@ -122,7 +136,7 @@ class Parser:
             if con["max_link_capacity"] <= 0:
                 raise ValueError("max_link_capacity must be "
                                  "a positive integer")
-            z1, z2 = con["zone1_name"], con["zone2_name"]
+            z1, z2 = con["name1"], con["name2"]
             if z1 not in zone_names or z2 not in zone_names:
                 raise ValueError(f"Connection {z1}-{z2} links "
                                  f"to undefined zone(s)")
@@ -186,6 +200,14 @@ connection: B-goal
         parser = Parser(path)
         with self.assertRaises(ValueError, msg="Should fail on "
                                "missing start_hub"):
+            parser.parse()
+
+    def test_dashes_in_names(self):
+        content = """nb_drones: 5\nstart_hub: st-art 0 0\nend_hub: goal 10 10\n"""
+        path = self.create_temp_map(content)
+        parser = Parser(path)
+        with self.assertRaises(ValueError, msg="Should fail on "
+                               "dashes in zone name"):
             parser.parse()
 
     def test_invalid_nb_drones(self):
