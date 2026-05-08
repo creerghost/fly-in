@@ -21,6 +21,5 @@ def main() -> None:
         zones[zone.name] = zone
 
 
-
 if __name__ == "__main__":
     main()
