@@ -1,7 +1,7 @@
 from src.Parser import Parser
 import sys
-from src.Zone import Zone
 from src.network import Network
+
 
 def main() -> None:
     if len(sys.argv) != 2:

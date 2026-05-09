@@ -18,15 +18,17 @@ class Network:
         self._assign_neighboring_zones()
 
     def _assign_zones_and_connections(self) -> None:
-        zone = Zone(**self.parser.start_hub)
-        self.zones[zone.name] = zone
+        if self.parser.start_hub is not None:
+            zone = Zone(**self.parser.start_hub)
+            self.zones[zone.name] = zone
 
         for hub_data in self.parser.hubs:
             zone = Zone(**hub_data)
             self.zones[zone.name] = zone
 
-        zone = Zone(**self.parser.end_hub)
-        self.zones[zone.name] = zone
+        if self.parser.end_hub is not None:
+            zone = Zone(**self.parser.end_hub)
+            self.zones[zone.name] = zone
 
         for con_data in self.parser.connections:
             connection = Connection(**con_data)

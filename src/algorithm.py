@@ -27,7 +27,7 @@ class ReservationTable():
 
     def is_link_available(self, zone1: str, zone2: str,
                           turn: int, max_link_capacity: int) -> bool:
-        link = tuple(sorted([zone1, zone2]))
+        link: Tuple[str, str] = (min(zone1, zone2), max(zone1, zone2))
         current_traffic = self.link_schedule.get((link, turn), 0)
         return current_traffic < max_link_capacity
 
@@ -43,7 +43,8 @@ class ReservationTable():
         # Ignore wait actions
             if curr_zone_name == next_zone_name:
                 continue
-            link = tuple(sorted([curr_zone_name, next_zone_name]))
+            link: Tuple[str, str] = (min(curr_zone_name, next_zone_name),
+                                     max(curr_zone_name, next_zone_name))
         # Reserve the link for all turns spent in transit
             for t in range(curr_turn + 1, next_turn + 1):
                 current_traffic = self.link_schedule.get((link, t), 0)
@@ -131,7 +132,7 @@ class SpaceTimePathfinder:
             zone_name=start_zone
             )
 
-        open_set = []
+        open_set: List[TemporalState] = []
         visited: Set[Tuple[str, int]] = set()
         heappush(open_set, start_state)
 
@@ -140,9 +141,10 @@ class SpaceTimePathfinder:
 
             if current_state.zone_name == end_zone:
                 path = []
-                while current_state:
-                    path.append((current_state.zone_name, current_state.turn))
-                    current_state = current_state.parent
+                curr: Optional[TemporalState] = current_state
+                while curr:
+                    path.append((curr.zone_name, curr.turn))
+                    curr = curr.parent
                 return path[::-1]
 
             space_time_key = (current_state.zone_name, current_state.turn)
