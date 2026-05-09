@@ -30,6 +30,7 @@ class Engine:
     def run(self) -> None:
         self._init_drones()
         self._plan_routes()
+
         turn = 1
 
         while True:
@@ -37,10 +38,17 @@ class Engine:
             turn_output = []
 
             for drone in self.drones:
-                if turn >= drone.path[-1][1]:
+                prev_location = drone.current_location
+
+                if turn > drone.path[-1][1]:
+                    continue
+
+                if turn == drone.path[-1][1]:
                     drone.current_location = drone.path[-1][0]
                     drone.status = "finished"
-                    turn_output.append(f"{drone.id}-{drone.current_location}")
+                    if drone.current_location != prev_location:
+                        turn_output.append(f"{drone.id}-"
+                                           f"{drone.current_location}")
                     continue
 
                 all_finished = False
@@ -53,22 +61,25 @@ class Engine:
 
                     if turn == next_turn:
                         drone.current_location = next_zone_name
-                        turn_output.append(f"{drone.id}-{next_zone_name}")
+                        if drone.current_location != prev_location:
+                            turn_output.append(f"{drone.id}-{next_zone_name}")
                         break
                     elif curr_turn < turn < next_turn:
                         # The drone is mid-transit (taking a multi-turn action)
                         if curr_zone_name == next_zone_name:
                             drone.current_location = curr_zone_name
-                            turn_output.append(f"{drone.id}-{curr_zone_name}")
                         else:
                             drone.current_location = f"{curr_zone_name}-" \
                                 f"{next_zone_name}"
-                            turn_output.append(f"{drone.id}-{curr_zone_name}"
-                                               f"-{next_zone_name}")
+                            if drone.current_location != prev_location:
+                                turn_output.append(f"{drone.id}-"
+                                                   f"{curr_zone_name}"
+                                                   f"-{next_zone_name}")
                         break
+
+            if turn_output:
+                print(" ".join(turn_output))
 
             if all_finished:
                 break
-
-            print(" ".join(turn_output))
             turn += 1
