@@ -1,14 +1,21 @@
 from src.drone import Drone
 from src.algorithm import ReservationTable, SpaceTimePathfinder
 from src.network import Network
+import time
 
 
 class Engine:
-    def __init__(self, network: Network) -> None:
+    def __init__(self, network: Network, visualize: bool = False,
+                 delay: float = 0.5) -> None:
         self.network = network
         self.reservations = ReservationTable()
         self.pathfinder = SpaceTimePathfinder(network, self.reservations)
         self.drones: list[Drone] = []
+        self.visualize = visualize
+        self.delay = delay
+        if self.visualize:
+            from src.renderer import Renderer
+            self.renderer = Renderer(self.network)
 
     def _init_drones(self) -> None:
         assert self.network.parser.start_hub is not None
@@ -32,6 +39,9 @@ class Engine:
         self._plan_routes()
 
         turn = 1
+
+        if self.visualize:
+            self.renderer.render_step(0, self.drones, [])
 
         while True:
             all_finished = True
@@ -78,7 +88,11 @@ class Engine:
                         break
 
             if turn_output:
-                print(" ".join(turn_output))
+                if self.visualize:
+                    self.renderer.render_step(turn, self.drones, turn_output)
+                    time.sleep(self.delay)
+                else:
+                    print(" ".join(turn_output))
 
             if all_finished:
                 break
