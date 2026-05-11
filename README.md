@@ -140,7 +140,14 @@ This strategy guarantees collision-free routing, makes conflict checks `O(1)`, a
 
 ### Movement rules and Heuristics
 
-The search algorithm must balance finding the shortest path with obeying strict map constraints. It uses a heuristic function (such as spatial distance or backward BFS distance from the goal) to guide the search efficiently.
+**A* Search Theory:**
+A* is a best-first search algorithm that finds the least-cost path by maintaining a priority queue based on the cost function `f(n) = g(n) + h(n)`:
+- `g(n)` represents the exact accumulated cost from the start node to the current node `n`.
+- `h(n)` represents the heuristic function, an estimated cost from node `n` to the goal.
+
+To guarantee that A* finds the mathematically optimal path, the heuristic must be **admissible**. An admissible heuristic never overestimates the true cost to reach the goal. If it overestimates, A* might settle for a sub-optimal path. If it underestimates (or is `0`, effectively turning A* into Dijkstra's Algorithm), it will explore unnecessary nodes, heavily impacting performance.
+
+The search algorithm must balance finding the shortest path with obeying strict map constraints. It uses this heuristic function to guide the search efficiently.
 **Code-Specific Detail:** The Manhattan distance heuristic is explicitly multiplied by `0.25`. Since passing through a `priority` zone costs `0.8` (instead of `1.0`), an unscaled Manhattan distance could overestimate the true cost to the goal, making the heuristic inadmissible. Scaling it down guarantees A* always finds the optimal path.
 
 - **Normal zones** cost 1.0 turn to traverse.
