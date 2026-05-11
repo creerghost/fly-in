@@ -43,21 +43,3 @@ class Network:
             zone2 = self.zones[con.name2]
             self.neighboring_zones[con.name1].append((zone2, con))
             self.neighboring_zones[con.name2].append((zone1, con))
-
-    def canvas_size(self) -> Tuple[int, int]:
-        if not self.zones:
-            self.size = (0, 0)
-            return self.size
-
-        x_coords = [zone.x for zone in self.zones.values()]
-        y_coords = [zone.y for zone in self.zones.values()]
-
-        self.canvas_min_x = min(x_coords)
-        self.canvas_max_x = max(x_coords)
-        self.canvas_min_y = min(y_coords)
-        self.canvas_max_y = max(y_coords)
-
-        width = self.canvas_max_x - self.canvas_min_x + 1
-        height = self.canvas_max_y - self.canvas_min_y + 1
-        self.size = (width, height)
-        return self.size
