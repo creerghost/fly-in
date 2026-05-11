@@ -147,9 +147,21 @@ A* is a best-first search algorithm that finds the least-cost path by maintainin
 
 To guarantee that A* finds the mathematically optimal path, the heuristic must be **admissible**. An admissible heuristic never overestimates the true cost to reach the goal. If it overestimates, A* might settle for a sub-optimal path. If it underestimates (or is `0`, effectively turning A* into Dijkstra's Algorithm), it will explore unnecessary nodes, heavily impacting performance.
 
-The search algorithm must balance finding the shortest path with obeying strict map constraints. It uses this heuristic function to guide the search efficiently.
-**Code-Specific Detail:** The Manhattan distance heuristic is explicitly multiplied by `0.25`. Since passing through a `priority` zone costs `0.8` (instead of `1.0`), an unscaled Manhattan distance could overestimate the true cost to the goal, making the heuristic inadmissible. Scaling it down guarantees A* always finds the optimal path.
+**Space-Time Implementation:**
+In this project, the traditional A* algorithm is adapted into a **Cooperative Space-Time A***. The search state (`TemporalState`) expands across both physical locations and time (turns). Instead of just generating spatial neighbors, the algorithm generates space-time neighbors, checking a global `ReservationTable`. If a `(zone, turn)` or `(link, turn)` exceeds capacity (`max_drones` or `max_link_capacity`), it is treated as a dynamic obstacle. The search also allows "wait" actions, meaning a drone can physically stay still to avoid a collision while time advances.
 
+The search algorithm must balance finding the shortest path with obeying strict map constraints. It uses a heuristic function to guide the search efficiently.
+
+**Manhattan Distance Heuristic:**
+Manhattan Distance (or Taxicab geometry) is the distance between two points measured along axes at right angles. Unlike Euclidean distance (the "as the crow flies" straight line), Manhattan distance calculates the sum of the absolute differences of their Cartesian coordinates. On a grid-like map where diagonal movement is impossible, Manhattan distance provides a highly accurate estimate of the minimum steps required.
+
+**Code-Specific Detail (The Final Formula):** 
+Because passing through a `priority` zone costs `0.8` (instead of `1.0`), an unscaled Manhattan distance could technically overestimate the true cost to the goal if a path uses priority zones, making the heuristic inadmissible. To guarantee A* always finds the mathematically optimal path without violating admissibility, the raw Manhattan distance is artificially scaled down by a factor of `0.25`.
+
+The **FINAL formula** calculated inside `_calculate_h` is:
+```python
+h(n) = ( |x_current - x_goal| + |y_current - y_goal| ) * 0.25
+```
 - **Normal zones** cost 1.0 turn to traverse.
 - **Priority zones** cost 0.8 turns (with a structural +1 turn advancement). This lower accumulation cost naturally pulls the A* search toward these zones when breaking ties.
 - **Restricted zones** cost 2 turns to cross. In the space-time graph, this is represented as an in-transit state across turns (e.g., reserving the zone for `Turn T` and `Turn T+1`).
