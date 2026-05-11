@@ -61,7 +61,7 @@ clean:
 lint: venv
 	@echo "flake8 + mypy checks..."
 	$(PYTHON_VENV) -m flake8 . --exclude=$(VENV),build,dist
-	$(PYTHON_VENV) -m mypy . --exclude $(VENV) --ignore-missing-imports --disallow-untyped-defs
+	$(PYTHON_VENV) -m mypy . --exclude $(VENV) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 	@echo "done!"
 
 lint-strict: venv

@@ -5,6 +5,10 @@ import time
 
 
 class Engine:
+    """
+    Core simulation engine that handles drone lifecycle, routing,
+    and turn-by-turn execution.
+    """
     def __init__(self, network: Network, visualize: bool = False,
                  delay: float = 0.5) -> None:
         self.network = network
@@ -18,12 +22,18 @@ class Engine:
             self.renderer = Renderer(self.network)
 
     def _init_drones(self) -> None:
+        """
+        Instantiate the drone objects based on network specifications.
+        """
         assert self.network.parser.start_hub is not None
         for i in range(self.network.parser.nb_drones):
             drone = Drone(f"D{i}", self.network.parser.start_hub["name"])
             self.drones.append(drone)
 
     def _plan_routes(self) -> None:
+        """
+        Execute pathfinding for all drones and register their reserved paths.
+        """
         assert self.network.parser.end_hub is not None
         for drone in self.drones:
             path = self.pathfinder.find_routes(
@@ -35,6 +45,10 @@ class Engine:
             drone.path = path
 
     def run(self) -> None:
+        """
+        Run the main simulation loop turn-by-turn until all drones reach their
+        destination.
+        """
         self._init_drones()
         self._plan_routes()
 

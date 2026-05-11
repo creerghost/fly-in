@@ -7,6 +7,9 @@ from src.Zone import Zone
 
 @dataclass(order=True)
 class TemporalState:
+    """
+    Storing data for each TemporalState object.
+    """
     f_cost: float
     g_cost: float = field(compare=False)
     h_cost: float = field(compare=False)
@@ -16,22 +19,40 @@ class TemporalState:
 
 
 class ReservationTable():
+    """
+    Maintains a schedule of zone and link capacities per turn
+    to prevent collisions.
+    """
     def __init__(self) -> None:
+        """
+        Initialize empty schedules for zones and links.
+        """
         self.zone_schedule: Dict[Tuple[str, int], int] = {}
         self.link_schedule: Dict[Tuple[Tuple[str, str], int], int] = {}
 
     def is_zone_available(self, zone_name: str,
                           turn: int, max_capacity: int) -> bool:
+        """
+        Check if a specific zone has remaining capacity during a given turn.
+        """
         current_occupancy = self.zone_schedule.get((zone_name, turn), 0)
         return current_occupancy < max_capacity
 
     def is_link_available(self, zone1: str, zone2: str,
                           turn: int, max_link_capacity: int) -> bool:
+        """
+        Check if a connection link between two zones has remaining
+        capacity during a given turn.
+        """
         link: Tuple[str, str] = (min(zone1, zone2), max(zone1, zone2))
         current_traffic = self.link_schedule.get((link, turn), 0)
         return current_traffic < max_link_capacity
 
     def register_path(self, path: List[Tuple[str, int]]) -> None:
+        """
+        Commit a path to the reservation table, locking zone and link
+        capacities for specific turns.
+        """
         # register the zone occupancy for each turn
         for zone_name, turn in path:
             current_occupancy = self.zone_schedule.get((zone_name, turn), 0)
@@ -52,12 +73,24 @@ class ReservationTable():
 
 
 class SpaceTimePathfinder:
+    """
+    Implements Cooperative Space-Time A* pathfinding algorithms respecting
+    reservation constraints.
+    """
     def __init__(self, network: Network,
                  reservations: ReservationTable) -> None:
+        """
+        Initialize the pathfinder with the network topology and global
+        reservation table.
+        """
         self.network = network
         self.reservations = reservations
 
     def _calculate_h(self, current_zone: str, target_zone: str) -> float:
+        """
+        Calculate a scaled Manhattan distance heuristic to maintain
+        admissibility.
+        """
         return float(abs(self.network.zones[current_zone].x -
                      self.network.zones[target_zone].x) +
                      abs(self.network.zones[current_zone].y -
@@ -67,6 +100,10 @@ class SpaceTimePathfinder:
                                  current_state: TemporalState,
                                  target_zone: str
                                  ) -> List[TemporalState]:
+        """
+        Generate all valid neighboring TemporalStates, considering wait
+        actions, zone types, and capacity limits.
+        """
         next_turn = current_state.turn + 1
         neighbors: List[TemporalState] = []
         current_zone: Zone = self.network.zones[current_state.zone_name]
@@ -99,12 +136,17 @@ class SpaceTimePathfinder:
                 next_turn = current_state.turn + 2
                 step_cost = 2.0
 
-            if self.reservations.is_link_available(
-                current_state.zone_name,
-                neighbor.name,
-                next_turn,
-                connection.max_capacity) \
-                and self.reservations.is_zone_available(
+            link_available = True
+            for t in range(current_state.turn + 1, next_turn + 1):
+                if not self.reservations.is_link_available(
+                        current_state.zone_name,
+                        neighbor.name,
+                        t,
+                        connection.max_capacity):
+                    link_available = False
+                    break
+
+            if link_available and self.reservations.is_zone_available(
                     neighbor.name,
                     next_turn,
                     neighbor.max_drones):
@@ -128,6 +170,10 @@ class SpaceTimePathfinder:
                     start_zone: str,
                     end_zone: str
                     ) -> Optional[List[Tuple[str, int]]]:
+        """
+        Run the A* search from start_zone to end_zone,
+        returning a list of (zone_name, turn) states if a path exists.
+        """
         start_state = TemporalState(
             f_cost=0.0,
             g_cost=0.0,

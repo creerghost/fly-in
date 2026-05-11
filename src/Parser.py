@@ -2,7 +2,13 @@ from typing import List, Dict, Any
 
 
 class Parser:
-    def __init__(self, filepath: str):
+    """
+    Parses and validates the map configuration file.
+    """
+    def __init__(self, filepath: str) -> None:
+        """
+        Initialize the parser with the target file path.
+        """
         self.filepath = filepath
 
         self.nb_drones: int = 0
@@ -14,6 +20,9 @@ class Parser:
         self._end_hub_count = 0
 
     def parse(self) -> None:
+        """
+        Read and parse the file line by line, then validate constraints.
+        """
         try:
             with open(self.filepath, 'r') as f:
                 for l_num, line in enumerate(f, start=1):
@@ -28,6 +37,9 @@ class Parser:
             raise ValueError(f"Line {l_num}: {e}")
 
     def _parse_line(self, line: str, line_num: int) -> None:
+        """
+        Parse an individual line from the configuration file.
+        """
         if line.startswith("nb_drones"):
             drones = line.split(":")
             if len(drones) != 2 or not drones[1].strip().isdigit():
@@ -53,6 +65,9 @@ class Parser:
                              f"Unknown syntax on line '{line}'")
 
     def _parse_zone_line(self, line: str) -> Dict[str, Any]:
+        """
+        Extract node data and metadata attributes from a zone string.
+        """
         parts = line.split("[")
         base_info = parts[0].strip().split()
         if len(base_info) != 3:
@@ -81,8 +96,14 @@ class Parser:
         return data
 
     def _parse_connection_line(self, line: str) -> Dict[str, Any]:
+        """
+        Extract edge data and link capacity metadata from a connection string.
+        """
         parts = line.split("[")
         names = parts[0].strip().split("-")
+
+        if len(names) != 2:
+            raise ValueError(f"Invalid connection syntax: {line}")
 
         data: Dict[str, Any] = {
             "name1": names[0],
@@ -101,6 +122,10 @@ class Parser:
         return data
 
     def _validate(self) -> None:
+        """
+        Validate all parsed data against project constraints
+        (unique hubs, capacities, etc).
+        """
         if self.nb_drones <= 0:
             raise ValueError("nb_drones must be a positive integer")
         if self.start_hub is None:

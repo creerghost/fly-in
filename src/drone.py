@@ -2,7 +2,10 @@ from typing import List, Tuple
 
 
 class Drone:
-    def __init__(self, drone_id: str, start_location: str):
+    def __init__(self, drone_id: str, start_location: str) -> None:
+        """
+        Initialize a Drone with its unique ID and starting location.
+        """
         self.id = drone_id
         self.current_location = start_location
         self.path: List[Tuple[str, int]] = []

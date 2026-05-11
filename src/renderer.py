@@ -29,7 +29,13 @@ COLORS: dict[str, tuple[int, int, int]] = {
 
 
 class Renderer:
-    def __init__(self, network: Network):
+    """
+    Handles the graphical display of the simulation using Pygame.
+    """
+    def __init__(self, network: Network) -> None:
+        """
+        Initialize the Pygame window and calculate canvas bounds.
+        """
         self.network = network
         self.canvas_size()
 
@@ -50,6 +56,9 @@ class Renderer:
         self.large_font = pygame.font.SysFont(None, 36)
 
     def canvas_size(self) -> None:
+        """
+        Determine the boundaries of the grid based on zone coordinates.
+        """
         if not self.network.zones:
             raise ValueError("Zones not defined")
 
@@ -62,6 +71,10 @@ class Renderer:
         self.canvas_max_y = max(y_coords)
 
     def _get_pixel_coords(self, x: int, y: int) -> tuple[int, int]:
+        """
+        Convert grid coordinates to Pygame window pixel coordinates, applying
+        an offset.
+        """
         px = (x - self.canvas_min_x) * self.tile_size + self.margin
         py = (self.canvas_max_y - y) * self.tile_size + self.margin
 
@@ -74,6 +87,10 @@ class Renderer:
     def render_step(
         self, turn: int, drones: list[Drone], turn_output: list[str]
     ) -> None:
+        """
+        Draw the current turn's state, including zones, connections,
+        and drones.
+        """
         self.pause: bool = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT or \
@@ -185,6 +202,9 @@ class Renderer:
         pygame.display.flip()
 
     def _paused(self) -> None:
+        """
+        Halt the visualizer loop until the spacebar is pressed again.
+        """
         while self.pause:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN and \
@@ -200,6 +220,10 @@ class Renderer:
     def _draw_drone_marker(
         self, px: int, py: int, drones_list: list[Drone], transit: bool = False
     ) -> None:
+        """
+        Render a custom drone bitmap image and grouping text label
+        at specific pixel coordinates.
+        """
         label = (drones_list[0].id if len(drones_list) == 1
                  else f"{len(drones_list)}D")
         text = self.font.render(label, True, COLORS["white"])
