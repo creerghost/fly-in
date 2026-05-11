@@ -8,6 +8,9 @@ from src.drone import Drone
 
 
 class Colors(Enum):
+    """
+    Stores colors used for rendering.
+    """
     GREEN = (34, 139, 34)
     BLUE = (65, 105, 225)
     RED = (220, 20, 60)
