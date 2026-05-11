@@ -58,11 +58,10 @@ class SpaceTimePathfinder:
         self.reservations = reservations
 
     def _calculate_h(self, current_zone: str, target_zone: str) -> float:
-        # Multiply by 0.8 to keep the heuristic admissible for priority zones
         return float(abs(self.network.zones[current_zone].x -
                      self.network.zones[target_zone].x) +
                      abs(self.network.zones[current_zone].y -
-                     self.network.zones[target_zone].y)) * 0.8
+                     self.network.zones[target_zone].y)) * 0.25
 
     def generate_valid_neighbors(self,
                                  current_state: TemporalState,

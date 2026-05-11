@@ -118,7 +118,11 @@ class Renderer:
 
             pygame.draw.circle(self.screen, COLORS["white"], (px, py), 24)
             pygame.draw.circle(self.screen, rgb, (px, py), 22)
-
+            cords_text = self.font.render(f"{zone.x},{zone.y}", True,
+                                          COLORS["white"])
+            self.screen.blit(cords_text, (px - cords_text.get_width() // 2,
+                                          py - cords_text.get_height() // 2
+                                          - 30))
             if zone.name == start_name:
                 lbl = self.font.render("Start", True, COLORS["black"])
                 self.screen.blit(
