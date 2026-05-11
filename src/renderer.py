@@ -1,12 +1,11 @@
 import os
 import sys
-from typing import Tuple, List, Dict
 import pygame
 from collections import defaultdict
 from src.network import Network
 from src.drone import Drone
 
-COLORS: Dict[str, Tuple[int, int, int]] = {
+COLORS: dict[str, tuple[int, int, int]] = {
     "green": (34, 139, 34),
     "blue": (65, 105, 225),
     "red": (220, 20, 60),
@@ -62,29 +61,40 @@ class Renderer:
         self.canvas_min_y = min(y_coords)
         self.canvas_max_y = max(y_coords)
 
-    def _get_pixel_coords(self, x: int, y: int) -> Tuple[int, int]:
+    def _get_pixel_coords(self, x: int, y: int) -> tuple[int, int]:
         px = (x - self.canvas_min_x) * self.tile_size + self.margin
         py = (self.canvas_max_y - y) * self.tile_size + self.margin
+
+        # chessboard-like cords to prevent connection overlaps
+        px += 30 if y % 2 == 0 else -10
+        py += 30 if x % 2 != 0 else -10
+
         return px, py
 
     def render_step(
-        self, turn: int, drones: List[Drone], turn_output: List[str]
+        self, turn: int, drones: list[Drone], turn_output: list[str]
     ) -> None:
+        self.pause: bool = False
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or \
+                (event.type == pygame.KEYDOWN and
+                 event.key == pygame.K_ESCAPE):
                 print("Bye!")
                 pygame.quit()
                 sys.exit(0)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.pause = True
+                self._paused()
 
         self.screen.fill((35, 10, 10))
 
         # Draw the Turn overlay
         turn_text = self.large_font.render(
-            f"Turn {turn}", True, COLORS.get("white"))
+            f"Turn {turn}", True, COLORS["white"])
         app_name = self.large_font.render(
-            "Fly-in visualizer", True, COLORS.get("white"))
-        self.screen.blit(turn_text, (20, 20))
-        self.screen.blit(app_name, (self.width // 2, 20))
+            "Fly-in visualizer", True, COLORS["white"])
+        self.screen.blit(turn_text, (10, 10))
+        self.screen.blit(app_name, (self.width // 2 - 100, 10))
         # 1. Draw Connection Lines
         for con in self.network.connections:
             z1 = self.network.zones.get(con.name1)
@@ -92,7 +102,7 @@ class Renderer:
             if z1 and z2:
                 p1 = self._get_pixel_coords(z1.x, z1.y)
                 p2 = self._get_pixel_coords(z2.x, z2.y)
-                pygame.draw.line(self.screen, COLORS.get("white"), p1, p2, 5)
+                pygame.draw.line(self.screen, COLORS["white"], p1, p2, 5)
                 pygame.draw.line(self.screen, (100, 100, 100), p1, p2, 3)
 
         start_name = (self.network.parser.start_hub["name"]
@@ -104,33 +114,33 @@ class Renderer:
         for zone in self.network.zones.values():
             px, py = self._get_pixel_coords(zone.x, zone.y)
             color_name = zone.color if zone.color else "white"
-            rgb = COLORS.get(color_name.lower(), COLORS.get("white"))
+            rgb = COLORS.get(color_name.lower(), COLORS["white"])
 
-            pygame.draw.circle(self.screen, COLORS.get("white"), (px, py), 24)
+            pygame.draw.circle(self.screen, COLORS["white"], (px, py), 24)
             pygame.draw.circle(self.screen, rgb, (px, py), 22)
 
             if zone.name == start_name:
-                lbl = self.font.render("Start", True, COLORS.get("black"))
+                lbl = self.font.render("Start", True, COLORS["black"])
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.name == end_name:
-                lbl = self.font.render("End", True, COLORS.get("black"))
+                lbl = self.font.render("End", True, COLORS["black"])
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.zone_type == "restricted":
-                lbl = self.font.render("R", True, COLORS.get("black"))
+                lbl = self.font.render("R", True, COLORS["black"])
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.zone_type == "blocked":
-                lbl = self.font.render("B", True, COLORS.get("black"))
+                lbl = self.font.render("B", True, COLORS["black"])
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.zone_type == "priority":
-                lbl = self.font.render("P", True, COLORS.get("black"))
+                lbl = self.font.render("P", True, COLORS["black"])
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
@@ -170,22 +180,35 @@ class Renderer:
 
         pygame.display.flip()
 
+    def _paused(self) -> None:
+        while self.pause:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN and \
+                        event.key == pygame.K_SPACE:
+                    self.pause = False
+                if event.type == pygame.QUIT or \
+                    (event.type == pygame.KEYDOWN and
+                     event.key == pygame.K_ESCAPE):
+                    print("Bye!")
+                    pygame.quit()
+                    sys.exit(0)
+
     def _draw_drone_marker(
-        self, px: int, py: int, drones_list: List[Drone], transit: bool = False
+        self, px: int, py: int, drones_list: list[Drone], transit: bool = False
     ) -> None:
         label = (drones_list[0].id if len(drones_list) == 1
                  else f"{len(drones_list)}D")
-        text = self.font.render(label, True, COLORS.get("white"))
+        text = self.font.render(label, True, COLORS["white"])
 
         rect_w = text.get_width() + 5
         rect_h = text.get_height() + 5
-        color: Tuple = COLORS.get("red") if not transit else COLORS.get("gray")
+        color = COLORS["red"] if not transit else COLORS["gray"]
         # Hover slightly above the node
         rect = pygame.Rect(0, 0, rect_w, rect_h)
         rect.center = (px, py - 25)
         rect_outline = pygame.Rect(0, 0, rect_w + 2, rect_h + 2)
         rect_outline.center = rect.center
-        pygame.draw.rect(self.screen, COLORS.get("white"), rect_outline,
+        pygame.draw.rect(self.screen, COLORS["white"], rect_outline,
                          border_radius=4)
         pygame.draw.rect(self.screen, color, rect, border_radius=3)
 

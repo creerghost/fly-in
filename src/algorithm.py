@@ -7,9 +7,9 @@ from src.Zone import Zone
 
 @dataclass(order=True)
 class TemporalState:
-    f_cost: int
-    g_cost: int = field(compare=False)
-    h_cost: int = field(compare=False)
+    f_cost: float
+    g_cost: float = field(compare=False)
+    h_cost: float = field(compare=False)
     turn: int = field(compare=False)
     zone_name: str = field(compare=False)
     parent: Optional['TemporalState'] = field(default=None, compare=False)
@@ -57,11 +57,12 @@ class SpaceTimePathfinder:
         self.network = network
         self.reservations = reservations
 
-    def _calculate_h(self, current_zone: str, target_zone: str) -> int:
-        return int(abs(self.network.zones[current_zone].x -
-                   self.network.zones[target_zone].x) +
-                   abs(self.network.zones[current_zone].y -
-                   self.network.zones[target_zone].y))
+    def _calculate_h(self, current_zone: str, target_zone: str) -> float:
+        # Multiply by 0.8 to keep the heuristic admissible for priority zones
+        return float(abs(self.network.zones[current_zone].x -
+                     self.network.zones[target_zone].x) +
+                     abs(self.network.zones[current_zone].y -
+                     self.network.zones[target_zone].y)) * 0.8
 
     def generate_valid_neighbors(self,
                                  current_state: TemporalState,
@@ -75,8 +76,8 @@ class SpaceTimePathfinder:
                                                next_turn,
                                                current_zone.max_drones):
             wait_state = TemporalState(
-                f_cost=(current_state.g_cost + 1) + current_state.h_cost,
-                g_cost=current_state.g_cost + 1,
+                f_cost=(current_state.g_cost + 1.0) + current_state.h_cost,
+                g_cost=current_state.g_cost + 1.0,
                 h_cost=current_state.h_cost,
                 turn=next_turn,
                 zone_name=current_state.zone_name,
@@ -88,11 +89,16 @@ class SpaceTimePathfinder:
                 current_state.zone_name]:
             if neighbor.zone_type == "blocked":
                 continue
-            if neighbor.zone_type == "normal" or \
-                    neighbor.zone_type == "priority":
+
+            step_cost = 1.0
+            if neighbor.zone_type == "normal":
                 next_turn = current_state.turn + 1
-            if neighbor.zone_type == "restricted":
+            elif neighbor.zone_type == "priority":
+                next_turn = current_state.turn + 1
+                step_cost = 0.8
+            elif neighbor.zone_type == "restricted":
                 next_turn = current_state.turn + 2
+                step_cost = 2.0
 
             if self.reservations.is_link_available(
                 current_state.zone_name,
@@ -104,8 +110,7 @@ class SpaceTimePathfinder:
                     next_turn,
                     neighbor.max_drones):
 
-                new_g_cost = current_state.g_cost + \
-                    (next_turn - current_state.turn)
+                new_g_cost = current_state.g_cost + step_cost
                 new_h_cost = self._calculate_h(neighbor.name, target_zone)
 
                 new_state = TemporalState(
@@ -125,8 +130,8 @@ class SpaceTimePathfinder:
                     end_zone: str
                     ) -> Optional[List[Tuple[str, int]]]:
         start_state = TemporalState(
-            f_cost=0,
-            g_cost=0,
+            f_cost=0.0,
+            g_cost=0.0,
             h_cost=self._calculate_h(start_zone, end_zone),
             turn=0,
             zone_name=start_zone
