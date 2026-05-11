@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
-from src.Zone import Zone
-from src.Connection import Connection
-from src.Parser import Parser
+from src.zone import Zone
+from src.connection import Connection
+from src.parser import Parser
 
 
 class Network:

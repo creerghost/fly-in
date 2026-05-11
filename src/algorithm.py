@@ -2,7 +2,7 @@ from typing import Tuple, Dict, List, Optional, Set
 from dataclasses import dataclass, field
 from src.network import Network
 from heapq import heappop, heappush
-from src.Zone import Zone
+from src.zone import Zone
 
 
 @dataclass(order=True)

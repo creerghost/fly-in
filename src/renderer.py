@@ -2,30 +2,31 @@ import os
 import sys
 import pygame
 from collections import defaultdict
+from enum import Enum
 from src.network import Network
 from src.drone import Drone
 
-COLORS: dict[str, tuple[int, int, int]] = {
-    "green": (34, 139, 34),
-    "blue": (65, 105, 225),
-    "red": (220, 20, 60),
-    "yellow": (255, 215, 0),
-    "orange": (255, 140, 0),
-    "cyan": (0, 255, 255),
-    "purple": (128, 0, 128),
-    "brown": (139, 69, 19),
-    "lime": (50, 205, 50),
-    "magenta": (255, 0, 255),
-    "gold": (255, 215, 0),
-    "black": (40, 40, 40),
-    "darkred": (139, 0, 0),
-    "maroon": (128, 0, 0),
-    "crimson": (220, 20, 60),
-    "violet": (238, 130, 238),
-    "white": (255, 255, 255),
-    "gray": (128, 128, 128),
-    "rainbow": (255, 105, 180),
-}
+
+class Colors(Enum):
+    GREEN = (34, 139, 34)
+    BLUE = (65, 105, 225)
+    RED = (220, 20, 60)
+    YELLOW = (255, 215, 0)
+    ORANGE = (255, 140, 0)
+    CYAN = (0, 255, 255)
+    PURPLE = (128, 0, 128)
+    BROWN = (139, 69, 19)
+    LIME = (50, 205, 50)
+    MAGENTA = (255, 0, 255)
+    GOLD = (255, 215, 0)
+    BLACK = (40, 40, 40)
+    DARKRED = (139, 0, 0)
+    MAROON = (128, 0, 0)
+    CRIMSON = (220, 20, 60)
+    VIOLET = (238, 130, 238)
+    WHITE = (255, 255, 255)
+    GRAY = (128, 128, 128)
+    RAINBOW = (255, 105, 180)
 
 
 class Renderer:
@@ -107,9 +108,9 @@ class Renderer:
 
         # Draw the Turn overlay
         turn_text = self.large_font.render(
-            f"Turn {turn}", True, COLORS["white"])
+            f"Turn {turn}", True, Colors.WHITE.value)
         app_name = self.large_font.render(
-            "Fly-in visualizer", True, COLORS["white"])
+            "Fly-in visualizer", True, Colors.WHITE.value)
         self.screen.blit(turn_text, (10, 10))
         self.screen.blit(app_name, (self.width // 2 - 100, 10))
         # 1. Draw Connection Lines
@@ -119,7 +120,7 @@ class Renderer:
             if z1 and z2:
                 p1 = self._get_pixel_coords(z1.x, z1.y)
                 p2 = self._get_pixel_coords(z2.x, z2.y)
-                pygame.draw.line(self.screen, COLORS["white"], p1, p2, 5)
+                pygame.draw.line(self.screen, Colors.WHITE.value, p1, p2, 5)
                 pygame.draw.line(self.screen, (100, 100, 100), p1, p2, 3)
 
         start_name = (self.network.parser.start_hub["name"]
@@ -131,37 +132,37 @@ class Renderer:
         for zone in self.network.zones.values():
             px, py = self._get_pixel_coords(zone.x, zone.y)
             color_name = zone.color if zone.color else "white"
-            rgb = COLORS.get(color_name.lower(), COLORS["white"])
+            rgb = getattr(Colors, color_name.upper(), Colors.WHITE).value
 
-            pygame.draw.circle(self.screen, COLORS["white"], (px, py), 24)
+            pygame.draw.circle(self.screen, Colors.WHITE.value, (px, py), 24)
             pygame.draw.circle(self.screen, rgb, (px, py), 22)
             cords_text = self.font.render(f"{zone.x},{zone.y}", True,
-                                          COLORS["white"])
+                                          Colors.WHITE.value)
             self.screen.blit(cords_text, (px - cords_text.get_width() // 2,
                                           py - cords_text.get_height() // 2
                                           - 30))
             if zone.name == start_name:
-                lbl = self.font.render("Start", True, COLORS["black"])
+                lbl = self.font.render("Start", True, Colors.BLACK.value)
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.name == end_name:
-                lbl = self.font.render("End", True, COLORS["black"])
+                lbl = self.font.render("End", True, Colors.BLACK.value)
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.zone_type == "restricted":
-                lbl = self.font.render("R", True, COLORS["black"])
+                lbl = self.font.render("R", True, Colors.BLACK.value)
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.zone_type == "blocked":
-                lbl = self.font.render("B", True, COLORS["black"])
+                lbl = self.font.render("B", True, Colors.BLACK.value)
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
             elif zone.zone_type == "priority":
-                lbl = self.font.render("P", True, COLORS["black"])
+                lbl = self.font.render("P", True, Colors.BLACK.value)
                 self.screen.blit(
                     lbl,
                     (px - lbl.get_width() // 2, py - lbl.get_height() // 2))
@@ -226,17 +227,17 @@ class Renderer:
         """
         label = (drones_list[0].id if len(drones_list) == 1
                  else f"{len(drones_list)}D")
-        text = self.font.render(label, True, COLORS["white"])
+        text = self.font.render(label, True, Colors.WHITE.value)
 
         rect_w = text.get_width() + 5
         rect_h = text.get_height() + 5
-        color = COLORS["red"] if not transit else COLORS["gray"]
+        color = Colors.RED.value if not transit else Colors.GRAY.value
         # Hover slightly above the node
         rect = pygame.Rect(0, 0, rect_w, rect_h)
         rect.center = (px, py - 25)
         rect_outline = pygame.Rect(0, 0, rect_w + 2, rect_h + 2)
         rect_outline.center = rect.center
-        pygame.draw.rect(self.screen, COLORS["white"], rect_outline,
+        pygame.draw.rect(self.screen, Colors.WHITE.value, rect_outline,
                          border_radius=4)
         pygame.draw.rect(self.screen, color, rect, border_radius=3)
 
