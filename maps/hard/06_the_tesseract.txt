@@ -1,0 +1,105 @@
+# HARD LEVEL: THE TESSERACT
+# A highly interconnected 3D-projection-like grid.
+# Drones must navigate multiple interdependent layers to find the shortest
+# path without overloading the tight inner connections.
+
+nb_drones: 25
+
+start_hub: start 0 0 [color=green max_drones=25]
+end_hub: end 12 0 [color=rainbow max_drones=25]
+
+# Outer Cube (Front Face)
+hub: f1 2 3 [color=blue]
+hub: f2 6 3 [color=blue]
+hub: f3 2 -3 [color=blue]
+hub: f4 6 -3 [color=blue]
+
+# Outer Cube (Back Face)
+hub: b1 4 5 [color=cyan]
+hub: b2 8 5 [color=cyan]
+hub: b3 4 -1 [color=cyan]
+hub: b4 8 -1 [color=cyan]
+
+# Inner Cube (Front Face)
+hub: if1 3 2 [color=orange]
+hub: if2 5 2 [color=orange]
+hub: if3 3 -2 [color=orange]
+hub: if4 5 -2 [color=orange]
+
+# Inner Cube (Back Face)
+hub: ib1 4 4 [color=red]
+hub: ib2 6 4 [color=red]
+hub: ib3 4 0 [color=red]
+hub: ib4 6 0 [color=red]
+
+# Target Access Ring
+hub: t1 10 2 [color=yellow]
+hub: t2 10 -2 [color=yellow]
+
+# --- CONNECTIONS ---
+
+connection: start-f1
+connection: start-f3
+connection: start-b1
+connection: start-b3
+
+# Outer Front Face
+connection: f1-f2
+connection: f1-f3
+connection: f3-f4
+connection: f2-f4
+
+# Outer Back Face
+connection: b1-b2
+connection: b1-b3
+connection: b3-b4
+connection: b2-b4
+
+# Connect Front to Back (Outer)
+connection: f1-b1
+connection: f2-b2
+connection: f3-b3
+connection: f4-b4
+
+# Inner Front Face
+connection: if1-if2
+connection: if1-if3
+connection: if3-if4
+connection: if2-if4
+
+# Inner Back Face
+connection: ib1-ib2
+connection: ib1-ib3
+connection: ib3-ib4
+connection: ib2-ib4
+
+# Connect Front to Back (Inner)
+connection: if1-ib1
+connection: if2-ib2
+connection: if3-ib3
+connection: if4-ib4
+
+# Connect Outer to Inner (The Tesseract edges)
+connection: f1-if1
+connection: f2-if2
+connection: f3-if3
+connection: f4-if4
+
+connection: b1-ib1
+connection: b2-ib2
+connection: b3-ib3
+connection: b4-ib4
+
+# Exit routing
+connection: f2-t1
+connection: b2-t1
+connection: if2-t1
+connection: ib2-t1
+
+connection: f4-t2
+connection: b4-t2
+connection: if4-t2
+connection: ib4-t2
+
+connection: t1-end
+connection: t2-end

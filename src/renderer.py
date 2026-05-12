@@ -144,6 +144,12 @@ class Renderer:
             self.screen.blit(cords_text, (px - cords_text.get_width() // 2,
                                           py - cords_text.get_height() // 2
                                           - 30))
+            zone_capacity = self.font.render(f"{zone.max_drones}", True,
+                                             Colors.BLACK.value)
+            self.screen.blit(zone_capacity, (px - zone_capacity.get_width()
+                                             // 2,
+                                             py - zone_capacity.get_height()
+                                             // 2 + 14))
             if zone.name == start_name:
                 lbl = self.font.render("Start", True, Colors.BLACK.value)
                 self.screen.blit(

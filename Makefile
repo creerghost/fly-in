@@ -6,7 +6,7 @@ MAIN = fly_in.py
 
 FLAGS ?=
 FILE ?=
-ARGS ?=
+ARGS ?= --visual --delay=1
 
 $(VENV)/bin/activate: requirements.txt
 	$(PYTHON_SYS) -m venv $(VENV)

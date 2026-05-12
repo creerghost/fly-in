@@ -150,6 +150,20 @@ To guarantee that A* finds the mathematically optimal path, the heuristic must b
 **Space-Time Implementation:**
 In this project, the traditional A* algorithm is adapted into a **Cooperative Space-Time A***. The search state (`TemporalState`) expands across both physical locations and time (turns). Instead of just generating spatial neighbors, the algorithm generates space-time neighbors, checking a global `ReservationTable`. If a `(zone, turn)` or `(link, turn)` exceeds capacity (`max_drones` or `max_link_capacity`), it is treated as a dynamic obstacle. The search also allows "wait" actions, meaning a drone can physically stay still to avoid a collision while time advances.
 
+### Generating Space-Time Neighbors
+
+The core engine of this adaptation is the `generate_valid_neighbors` function. In standard pathfinding, a "neighbor" is just a physically connected node. In **Space-Time pathfinding**, a "neighbor" is a combination of **Where you are going** and **When you will be there**. 
+
+This function evaluates valid moves by breaking them down into two categories:
+
+1. **The "Wait" Action:** Sometimes the fastest path is currently blocked by another drone. Instead of moving away, the drone can wait. The function checks the `ReservationTable` to see if the current zone will still have capacity (i.e., not exceeding `max_drones`) during the `next_turn`. If it does, it generates a "Wait State" where the physical location remains the same, but the time (`turn`) advances by 1 and the cost increases by 1.0.
+
+2. **Moving to Adjacent Zones:** The algorithm loops through every physically connected zone and evaluates it as a potential move:
+   - **Zone Types & Costs:** It checks the `zone_type` to calculate the arrival time (`next_turn`) and the A* penalty (`step_cost`). Normal zones take 1 turn (cost 1.0), Priority zones take 1 turn (cost 0.8), and Restricted zones take 2 entire turns to cross (cost 2.0). Blocked zones are completely pruned.
+   - **Collision Prevention:** Before committing, the `ReservationTable` must confirm that the **link** connecting the two zones is not fully occupied during transit, and that the **destination zone** has an open slot exactly on the turn of arrival.
+   - **State Creation:** If the path is clear, it calculates the new `g_cost` (total time elapsed) and `h_cost` (estimated time to goal), bundling it into a new `TemporalState` for the priority queue.
+
+
 The search algorithm must balance finding the shortest path with obeying strict map constraints. It uses a heuristic function to guide the search efficiently.
 
 **Manhattan Distance Heuristic:**
@@ -167,6 +181,13 @@ h(n) = ( |x_current - x_goal| + |y_current - y_goal| ) * 0.25
 - **Restricted zones** cost 2 turns to cross. In the space-time graph, this is represented as an in-transit state across turns (e.g., reserving the zone for `Turn T` and `Turn T+1`).
 - **Blocked zones** are treated as static obstacles and are completely pruned from the search tree.
 - **Wait actions** (costing 1 turn) are injected as valid neighbors in the A* expansion, allowing a drone to stall at its current zone if the path ahead is blocked, provided its current zone still has capacity at `Turn T+1`.
+
+### Priority Queue (heapq)
+
+The algorithm leverages Python's `heapq` module to maintain an efficient priority queue (min-heap) for the A* `open_set`.
+- **Always Picking the Best Path:** A* must constantly evaluate the most promising path first—the state with the lowest total estimated cost (`f_cost`).
+- **Performance:** Searching a standard list to find the minimum cost node takes **O(N)** time, which would bottleneck the algorithm on large maps. `heapq` automatically keeps the best node at the front. `heappop()` grabs the lowest `f_cost` instantly, and `heappush()` sorts new nodes in **O(log N)** time, keeping the algorithm extremely fast.
+- **Dataclass Integration:** The `TemporalState` dataclass explicitly places `f_cost` as its first attribute and uses `@dataclass(order=True)`. This allows `heapq` to automatically compare and mathematically organize the states inside the heap without any custom sorting functions.
 
 ### Complexity
 
@@ -234,12 +255,19 @@ This level of visual feedback improves understanding in three main ways:
 
 The visualizer also supports pause and resume with the space bar, and quitting with Escape or the window close button.
 
+### Disadvantages
+
+- **Static Window Scaling:** The visualizer's window dimensions are calculated directly from the map's coordinate extremes using a fixed tile size. As a result, very large maps or maps with widely spaced nodes (such as the Challenger maps) can generate a window that exceeds standard screen resolutions. Since there is no dynamic zooming, panning, or responsive scaling implemented, parts of these massive grids may overflow off-screen and become impossible to view completely.
+
 ## Resources
 
 - Python documentation: https://docs.python.org/3/
-- `heapq` documentation: https://docs.python.org/3/library/heapq.html
+- `heapq` documentation: https://www.geeksforgeeks.org/python/heap-queue-or-heapq-in-python/
 - Pygame documentation: https://www.pygame.org/docs/
-- A* search overview: https://en.wikipedia.org/wiki/A*_search_algorithm
+- A* search overview: https://www.datacamp.com/tutorial/a-star-algorithm
+- Cooperative A*:
+`David Silver. 2005. Cooperative pathfinding. In Proceedings of the First AAAI Conference on Artificial Intelligence and Interactive Digital Entertainment (AIIDE'05). AAAI Press, 117–122.
+`
 - 42 project subject and map files included in this repository
 
 ### AI Usage

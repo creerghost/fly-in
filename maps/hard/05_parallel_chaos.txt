@@ -1,0 +1,56 @@
+# HARD LEVEL: PARALLEL CHAOS
+# Three distinct paths with wildly varying local capacities.
+# A greedy algorithm will suffer greatly here.
+
+nb_drones: 40
+
+start_hub: start 0 0 [color=green max_drones=40]
+end_hub: target 10 0 [color=rainbow max_drones=40]
+
+# --- PATH 1: The Fast-Slow-Fast (Bottleneck at end) ---
+hub: p1_a 2 3 [color=cyan max_drones=8]
+hub: p1_b 4 3 [color=blue max_drones=2]
+hub: p1_c 6 3 [color=cyan max_drones=8]
+hub: p1_d 8 3 [color=blue max_drones=2]
+
+# --- PATH 2: The Slow-Fast-Slow (Bottleneck at start) ---
+hub: p2_a 2 0 [color=purple max_drones=2]
+hub: p2_b 4 0 [color=magenta max_drones=8]
+hub: p2_c 6 0 [color=purple max_drones=2]
+hub: p2_d 8 0 [color=magenta max_drones=8]
+
+# --- PATH 3: The Steady Slog (Consistent low capacity) ---
+hub: p3_a 2 -3 [color=orange max_drones=3]
+hub: p3_b 4 -3 [color=orange max_drones=3]
+hub: p3_c 6 -3 [color=orange max_drones=3]
+hub: p3_d 8 -3 [color=orange max_drones=3]
+
+# --- CONNECTIONS ---
+
+connection: start-p1_a [max_link_capacity=8]
+connection: p1_a-p1_b [max_link_capacity=2]
+connection: p1_b-p1_c [max_link_capacity=8]
+connection: p1_c-p1_d [max_link_capacity=2]
+connection: p1_d-target [max_link_capacity=8]
+
+connection: start-p2_a [max_link_capacity=2]
+connection: p2_a-p2_b [max_link_capacity=8]
+connection: p2_b-p2_c [max_link_capacity=2]
+connection: p2_c-p2_d [max_link_capacity=8]
+connection: p2_d-target [max_link_capacity=2]
+
+connection: start-p3_a [max_link_capacity=3]
+connection: p3_a-p3_b [max_link_capacity=3]
+connection: p3_b-p3_c [max_link_capacity=3]
+connection: p3_c-p3_d [max_link_capacity=3]
+connection: p3_d-target [max_link_capacity=3]
+
+# Rare cross-over paths (with high penalty)
+connection: p1_a-p2_b [max_link_capacity=1]
+connection: p2_a-p3_b [max_link_capacity=1]
+
+connection: p1_b-p2_c [max_link_capacity=1]
+connection: p2_b-p3_c [max_link_capacity=1]
+
+connection: p1_c-p2_d [max_link_capacity=1]
+connection: p2_c-p3_d [max_link_capacity=1]
