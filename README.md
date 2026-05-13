@@ -273,6 +273,7 @@ The visualizer also supports pause and resume with the space bar, and quitting w
 ### AI Usage
 
 AI assistance was utilized during the development of this project for the following tasks:
+- **Algorithm Comprehension:** AI helped me better understand the algorithm, especially the space-time pathfinding part.
 - **Debugging and Refactoring:** Assisting in identifying edge cases within the space-time A* pathfinding implementation.
 - **Documentation & Testing:** Helping structure and proofread this `README.md` to ensure it meets all curriculum requirements, and generating PEP 257 compliant docstrings for classes and methods across the codebase.
 
