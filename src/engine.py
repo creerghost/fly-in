@@ -1,7 +1,6 @@
 from src.drone import Drone
 from src.algorithm import ReservationTable, SpaceTimePathfinder
 from src.network import Network
-import time
 
 
 class Engine:
@@ -19,7 +18,7 @@ class Engine:
         self.delay = delay
         if self.visualize:
             from src.renderer import Renderer
-            self.renderer = Renderer(self.network)
+            self.renderer = Renderer(self.network, self.delay)
 
     def _init_drones(self) -> None:
         """
@@ -55,7 +54,7 @@ class Engine:
         turn = 1
 
         if self.visualize:
-            self.renderer.render_step(0, self.drones, [])
+            self.renderer.animate_turn(turn, self.drones, [])
 
         while True:
             all_finished = True
@@ -103,8 +102,7 @@ class Engine:
 
             if turn_output:
                 if self.visualize:
-                    self.renderer.render_step(turn, self.drones, turn_output)
-                    time.sleep(self.delay)
+                    self.renderer.animate_turn(turn, self.drones, turn_output)
                 else:
                     print(" ".join(turn_output))
 

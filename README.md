@@ -241,10 +241,12 @@ The optional visualizer opens a live Pygame window that brings the simulation to
 - **Node Data & Identifiers:** 
   - The exact `x,y` coordinates of each node are printed directly underneath it.
   - A descriptive letter (`Start`, `End`, `R` for restricted, `B` for blocked, `P` for priority) is stamped in the absolute center of the node circle for quick identification.
+- **Animated Drone Motion:** The renderer now interpolates drone positions between turns at 60 FPS, so movement looks smooth instead of jumping from one node to the next.
 - **Drone State Visualization:**
-  - **In Node:** If a drone is resting or acting inside a zone, its marker is drawn hovering slightly above the node (`py - 25`), wrapped in a bright red rectangle.
-  - **In Transit:** If a drone is caught mid-transit between two zones over multiple turns, its marker is drawn exactly at the mathematical midpoint of the connecting line and is colored gray to signify its "in-flight" status.
-- **Drone Graphics:** Each marker utilizes a custom loaded image bitmap (`imgs/drone.bmp`), which is scaled perfectly to 45x45 pixels and layered underneath dynamically grouping text labels (e.g. `2D` if two drones occupy the same spot).
+  - **In Node:** When a drone is resting or acting inside a zone, its marker is drawn hovering slightly above the node (`py - 25`), wrapped in a bright red rectangle.
+  - **In Transit:** When a drone is moving between two zones, its position is animated along the segment and rendered in gray while the move is in progress.
+- **Drone Graphics:** Each marker uses a custom loaded image bitmap (`imgs/drone.bmp`), scaled to 45x45 pixels and layered underneath dynamically grouped text labels (e.g. `2D` if two drones occupy the same spot).
+- **Responsive Window Loop:** The visualizer processes quit, escape, and pause events on every frame so the animation stays interactive while it plays.
 
 ### Advantages
 
@@ -252,6 +254,8 @@ This level of visual feedback improves understanding in three main ways:
 - It makes congestion visible immediately when several drones compete for the same area.
 - It shows where restricted zones delay movement and how transit spans multiple turns through the gray midpoint markers.
 - It makes it easier to visually explain why a pathing algorithm's solution is valid or why a specific bottleneck appears.
+
+The animated renderer also makes short moves easier to follow, since each drone eases into and out of a turn instead of snapping instantly to the next location.
 
 The visualizer also supports pause and resume with the space bar, and quitting with Escape or the window close button.
 
