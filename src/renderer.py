@@ -36,6 +36,8 @@ class Colors(Enum):
 class Renderer:
     """
     Handles the graphical display of the simulation using Pygame.
+    Features an interactive time-scrubbing loop and a Heads-Up Display (HUD)
+    for simulation analytics.
     """
     def __init__(self, network: Network, play_speed: float = 1) -> None:
         """
@@ -132,6 +134,11 @@ class Renderer:
              (py - 25) - text.get_height() // 2))
 
     def run(self, drones: List[Drone]) -> None:
+        """
+        Start the interactive visualizer loop.
+        Calculates HUD metrics and continuously renders drones, maps,
+        and analytics while processing user inputs.
+        """
         max_turn = max(d.path[-1][1] for d in drones)
         total_cost: float = 0.0
         for d in drones:
@@ -172,6 +179,10 @@ class Renderer:
             pygame.display.flip()
 
     def _handle_time_and_events(self, max_turn: float, dt: float) -> None:
+        """
+        Process keyboard events for pausing, scrubbing time, and quitting.
+        Updates the global `current_time` based on user input and delta time.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 print("Bye!")
@@ -198,6 +209,10 @@ class Renderer:
         self.current_time = max(0.0, min(float(max_turn), self.current_time))
 
     def _get_loc(self, drone: Drone, t: int) -> str:
+        """
+        Determine the string representation of a drone's location at a specific
+        integer turn. Formats mid-transit locations as `zone1-zone2`.
+        """
         if t >= drone.path[-1][1]:
             return drone.path[-1][0]
         for i in range(len(drone.path) - 1):
@@ -213,6 +228,10 @@ class Renderer:
         return drone.path[-1][0]
 
     def _print_turn_output(self, drones: List[Drone]) -> None:
+        """
+        Print drone movements to standard output as simulation time advances.
+        Only prints when the time scrubs forward past a new integer turn.
+        """
         while self.highest_turn_printed < int(self.current_time):
             self.highest_turn_printed += 1
             t = self.highest_turn_printed
@@ -226,6 +245,9 @@ class Renderer:
                 print(" ".join(turn_output))
 
     def _draw_overlays(self) -> None:
+        """
+        Render the global turn counter and window title.
+        """
         self.screen.blit(
             self.large_font.render(
                 f"Turn {int(self.current_time)}",
@@ -240,6 +262,10 @@ class Renderer:
             (self.width // 2 - 100, 10))
 
     def _draw_connections(self) -> None:
+        """
+        Render the network edges between zones, slightly offset to prevent
+        overlapping bidirectional connections.
+        """
         for con in self.network.connections:
             z1 = self.network.zones.get(con.name1)
             z2 = self.network.zones.get(con.name2)
@@ -252,6 +278,10 @@ class Renderer:
                     self.screen, (100, 100, 100), p1, p2, 3)
 
     def _draw_zones(self) -> None:
+        """
+        Render the network nodes (hubs) along with their metadata, capacity,
+        and type abbreviations (e.g. 'Start', 'End', 'R', 'P').
+        """
         for zone in self.network.zones.values():
             px, py = self._get_pixel_coords(zone.x, zone.y)
             color_name = zone.color if zone.color else "white"
@@ -298,6 +328,10 @@ class Renderer:
                      py - lbl.get_height() // 2))
 
     def _draw_drones(self, drones: List[Drone]) -> None:
+        """
+        Calculate interpolated drone positions based on the current time and
+        render their markers. Groups overlapping drones visually.
+        """
         drone_groups: Dict[Tuple[int, int], List[Drone]] = {}
         drone_transits: Dict[Tuple[int, int], bool] = {}
         self.active_drones = 0
@@ -349,6 +383,10 @@ class Renderer:
                 coord[0], coord[1], d_list, drone_transits[coord])
 
     def _draw_hud(self) -> None:
+        """
+        Render the analytics panel and keyboard controls at the bottom of the
+        visualizer window.
+        """
         panel_rect = pygame.Rect(
             0, self.height - self.panel_height, self.width, self.panel_height)
         pygame.draw.rect(self.screen, (20, 10, 10), panel_rect)

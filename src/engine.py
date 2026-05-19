@@ -45,8 +45,9 @@ class Engine:
 
     def run(self) -> None:
         """
-        Run the main simulation loop turn-by-turn until all drones reach their
-        destination.
+        Run the simulation by initializing drones and planning routes.
+        If visualization is enabled, control is handed over to the renderer.
+        Otherwise, executes a turn-by-turn console simulation.
         """
         self._init_drones()
         self._plan_routes()

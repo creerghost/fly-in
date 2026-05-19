@@ -46,8 +46,8 @@ You can also override the default map or simulation arguments by passing flags t
 # Run a specific map
 make run FILE=maps/hard/02_capacity_hell.txt
 
-# Run with custom arguments (e.g., visualizer enabled, 0.2s delay)
-make run ARGS="--visual --delay=0.2"
+# Run with custom arguments (e.g., visualizer enabled, 2.0x playback speed)
+make run ARGS="--visual --speed=2.0"
 
 # Override both
 make run FILE=maps/hard/02_capacity_hell.txt ARGS="--visual"
@@ -61,7 +61,7 @@ Or run the simulator manually with specific maps:
 ```bash
 python3 fly_in.py maps/easy/01_linear_path.txt
 python3 fly_in.py maps/medium/03_priority_puzzle.txt --visual
-python3 fly_in.py maps/hard/02_capacity_hell.txt --visual --delay 0.2
+python3 fly_in.py maps/hard/02_capacity_hell.txt --visual --speed 2.0
 ```
 
 ### Map format
@@ -246,7 +246,9 @@ The optional visualizer opens a live Pygame window that brings the simulation to
   - **In Node:** When a drone is resting or acting inside a zone, its marker is drawn hovering slightly above the node (`py - 25`), wrapped in a bright red rectangle.
   - **In Transit:** When a drone is moving between two zones, its position is animated along the segment and rendered in gray while the move is in progress.
 - **Drone Graphics:** Each marker uses a custom loaded image bitmap (`imgs/drone.bmp`), scaled to 45x45 pixels and layered underneath dynamically grouped text labels (e.g. `2D` if two drones occupy the same spot).
-- **Responsive Window Loop:** The visualizer processes quit, escape, and pause events on every frame so the animation stays interactive while it plays.
+- **Interactive Scrubbing & Playback:** You can pause the simulation at any time using `Space`, and physically scrub time forward and backward using the `Left` and `Right` arrow keys.
+- **Heads-Up Display (HUD):** A dedicated panel at the bottom of the screen displays real-time analytics, including the total number of drones, average turns per drone, total path cost, and exactly how many drones are actively moving at the current moment in time.
+- **Responsive Window Loop:** The visualizer handles interaction events on every frame so the animation stays completely smooth while playing at custom speeds configured by `--speed`.
 
 ### Advantages
 
