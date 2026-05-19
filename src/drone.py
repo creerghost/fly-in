@@ -10,3 +10,7 @@ class Drone:
         self.current_location = start_location
         self.path: List[Tuple[str, int]] = []
         self.status = "waiting"  # waiting/in_flight/finished
+        self.draw_pos: Tuple[float, float] = (0.0, 0.0)
+        self.prev_pos: Tuple[float, float] = (0.0, 0.0)
+        self.next_pos: Tuple[float, float] = (0.0, 0.0)
+        self.animation_ready = False
