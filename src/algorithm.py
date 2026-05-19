@@ -1,8 +1,7 @@
 from typing import Tuple, Dict, List, Optional, Set
 from dataclasses import dataclass, field
-from src.network import Network
 from heapq import heappop, heappush
-from src.zone import Zone
+from src.network import Network, Zone
 
 
 @dataclass(order=True)
@@ -142,7 +141,7 @@ class SpaceTimePathfinder:
                         current_state.zone_name,
                         neighbor.name,
                         t,
-                        connection.max_capacity):
+                        connection.max_link_capacity):
                     link_available = False
                     break
 

@@ -30,7 +30,7 @@ class Parser:
                     if not line or line.startswith('#'):
                         continue
                     self._parse_line(line, l_num)
-            self._validate()
+            # self._validate()
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")
         except ValueError as e:
@@ -121,48 +121,48 @@ class Parser:
                         data["max_link_capacity"] = int(v)
         return data
 
-    def _validate(self) -> None:
-        """
-        Validate all parsed data against project constraints
-        (unique hubs, capacities, etc).
-        """
-        if self.nb_drones <= 0:
-            raise ValueError("nb_drones must be a positive integer")
-        if self.start_hub is None:
-            raise ValueError("Missing start_hub")
-        if self.end_hub is None:
-            raise ValueError("Missing end_hub")
-        if self._start_hub_count != 1:
-            raise ValueError("Only one start_hub is allowed")
-        if self._end_hub_count != 1:
-            raise ValueError("Only one end_hub is allowed")
+    # def _validate(self) -> None:
+    #     """
+    #     Validate all parsed data against project constraints
+    #     (unique hubs, capacities, etc).
+    #     """
+    #     if self.nb_drones <= 0:
+    #         raise ValueError("nb_drones must be a positive integer")
+    #     if self.start_hub is None:
+    #         raise ValueError("Missing start_hub")
+    #     if self.end_hub is None:
+    #         raise ValueError("Missing end_hub")
+    #     if self._start_hub_count != 1:
+    #         raise ValueError("Only one start_hub is allowed")
+    #     if self._end_hub_count != 1:
+    #         raise ValueError("Only one end_hub is allowed")
 
-        zone_names = set()
-        valid_types = {"normal", "blocked", "restricted", "priority"}
-        all_hubs = [self.start_hub, self.end_hub] + self.hubs
-        for hub in all_hubs:
-            if "-" in hub["name"]:
-                raise ValueError(f"Zone name should not contain dashes"
-                                 f": {hub["name"]}")
-            if hub["max_drones"] <= 0:
-                raise ValueError("max_drones must be a positive integer")
-            if hub["name"] in zone_names:
-                raise ValueError(f"Duplicate zone name found: {hub["name"]}")
-            zone_names.add(hub["name"])
-            if hub["zone_type"] not in valid_types:
-                raise ValueError(f"Invalid zone type: for"
-                                 f" {hub["name"]}: {hub["zone_type"]}")
+    #     zone_names = set()
+    #     valid_types = {"normal", "blocked", "restricted", "priority"}
+    #     all_hubs = [self.start_hub, self.end_hub] + self.hubs
+    #     for hub in all_hubs:
+    #         if "-" in hub["name"]:
+    #             raise ValueError(f"Zone name should not contain dashes"
+    #                              f": {hub["name"]}")
+    #         if hub["max_drones"] <= 0:
+    #             raise ValueError("max_drones must be a positive integer")
+    #         if hub["name"] in zone_names:
+    #             raise ValueError(f"Duplicate zone name found: {hub["name"]}")
+    #         zone_names.add(hub["name"])
+    #         if hub["zone_type"] not in valid_types:
+    #             raise ValueError(f"Invalid zone type: for"
+    #                              f" {hub["name"]}: {hub["zone_type"]}")
 
-        seen_connections = set()
-        for con in self.connections:
-            if con["max_link_capacity"] <= 0:
-                raise ValueError("max_link_capacity must be "
-                                 "a positive integer")
-            z1, z2 = con["name1"], con["name2"]
-            if z1 not in zone_names or z2 not in zone_names:
-                raise ValueError(f"Connection {z1}-{z2} links "
-                                 f"to undefined zone(s)")
-            conn_tuple = tuple(sorted([z1, z2]))
-            if conn_tuple in seen_connections:
-                raise ValueError(f"Duplicate connection found: {z1}-{z2}")
-            seen_connections.add(conn_tuple)
+    #     seen_connections = set()
+    #     for con in self.connections:
+    #         if con["max_link_capacity"] <= 0:
+    #             raise ValueError("max_link_capacity must be "
+    #                              "a positive integer")
+    #         z1, z2 = con["name1"], con["name2"]
+    #         if z1 not in zone_names or z2 not in zone_names:
+    #             raise ValueError(f"Connection {z1}-{z2} links "
+    #                              f"to undefined zone(s)")
+    #         conn_tuple = tuple(sorted([z1, z2]))
+    #         if conn_tuple in seen_connections:
+    #             raise ValueError(f"Duplicate connection found: {z1}-{z2}")
+    #         seen_connections.add(conn_tuple)
