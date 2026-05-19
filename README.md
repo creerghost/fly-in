@@ -246,7 +246,7 @@ The optional visualizer opens a live Pygame window that brings the simulation to
   - **In Node:** When a drone is resting or acting inside a zone, its marker is drawn hovering slightly above the node (`py - 25`), wrapped in a bright red rectangle.
   - **In Transit:** When a drone is moving between two zones, its position is animated along the segment and rendered in gray while the move is in progress.
 - **Drone Graphics:** Each marker uses a custom loaded image bitmap (`imgs/drone.bmp`), scaled to 45x45 pixels and layered underneath dynamically grouped text labels (e.g. `2D` if two drones occupy the same spot).
-- **Interactive Scrubbing & Playback:** You can pause the simulation at any time using `Space`, and physically scrub time forward and backward using the `Left` and `Right` arrow keys.
+- **Interactive Scrubbing & Playback:** You can pause the simulation at any time using `Space`, physically scrub time forward and backward using the `Left` and `Right` arrow keys, or instantly reset back to the beginning using the `R` key.
 - **Heads-Up Display (HUD):** A dedicated panel at the bottom of the screen displays real-time analytics, including the total number of drones, average turns per drone, total path cost, and exactly how many drones are actively moving at the current moment in time.
 - **Responsive Window Loop:** The visualizer handles interaction events on every frame so the animation stays completely smooth while playing at custom speeds configured by `--speed`.
 
@@ -259,7 +259,7 @@ This level of visual feedback improves understanding in three main ways:
 
 The animated renderer also makes short moves easier to follow, since each drone eases into and out of a turn instead of snapping instantly to the next location.
 
-The visualizer also supports pause and resume with the space bar, and quitting with Escape or the window close button.
+The visualizer also supports pause and resume with the `Space` bar, resetting with `R`, and quitting with `Escape` or the window close button.
 
 ### Disadvantages
 

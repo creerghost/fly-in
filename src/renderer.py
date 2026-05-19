@@ -203,6 +203,9 @@ class Renderer:
             self.current_time -= dt * self.scrub_speed * 0.65
         elif keys[pygame.K_RIGHT]:
             self.current_time += dt * self.scrub_speed
+        elif keys[pygame.K_r]:
+            self.current_time = 0.0
+            self.highest_turn_printed = 0
         else:
             self.current_time += dt * play_speed
 
@@ -415,6 +418,7 @@ class Renderer:
         controls = [
             ("[LEFT] / [RIGHT]", "Scrub Time"),
             ("[SPACE]", "Play / Pause"),
+            ("[R]", "Reset Simulation"),
             ("[ESC]", "Quit")
         ]
 
