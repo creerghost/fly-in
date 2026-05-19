@@ -44,7 +44,8 @@ class Renderer:
         Initialize the Pygame window and calculate canvas bounds.
         """
         self.network = network
-        self.canvas_size()
+        self._canvas_size()
+        self.play_speed = play_speed
 
         pygame.init()
         pygame.display.set_caption("Fly-in Drone Simulator")
@@ -57,24 +58,33 @@ class Renderer:
             * self.tile_size + 2 * self.margin + 50
         self.height = (self.canvas_max_y - self.canvas_min_y) \
             * self.tile_size + 2 * self.margin + self.panel_height
-
+        self._extend_width()
+        # self._adjust_tile_size()
+        print(self.width, self.height)
         self.current_time = 0.0
         # ensures turn outputs are printed only when going forward in time
         self.highest_turn_printed = 0
-        self.play_speed = play_speed
         self.scrub_speed = self.play_speed * 3
-
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.font = pygame.font.SysFont(None, 20)
         self.large_font = pygame.font.SysFont(None, 36)
+        self.small_font = pygame.font.SysFont(None, 14)
         self.hud_font = pygame.font.SysFont(None, 26)
         self.clock = pygame.time.Clock()
-
         self.drone_img = pygame.transform.scale(
             pygame.image.load(os.path.join("imgs", "drone.bmp")), (45, 45)
         )
 
-    def canvas_size(self) -> None:
+    # def _adjust_tile_size(self) -> None:
+    #     self.tile_size *= (1920 + self.width) // self.tile_size
+
+    def _extend_width(self) -> None:
+        width = 650 - self.width
+        if width <= 0:
+            return
+        self.width += width
+
+    def _canvas_size(self) -> None:
         """
         Determine the boundaries of the grid based on zone coordinates.
         """
@@ -141,21 +151,26 @@ class Renderer:
         """
         max_turn = max(d.path[-1][1] for d in drones)
         total_cost: float = 0.0
+        total_cost_stats: int = 0
         for d in drones:
             for i in range(0, len(d.path) - 1):
                 prev_node = d.path[i][0]
                 next_node = d.path[i + 1][0]
                 if prev_node == next_node:
                     total_cost += 1
+                    total_cost_stats += 1
                 else:
                     if self.network.zones[next_node].zone_type == "restricted":
                         total_cost += 2
+                        total_cost_stats += 2
                     elif self.network.zones[next_node].zone_type == "normal":
                         total_cost += 1
+                        total_cost_stats += 1
                     elif self.network.zones[next_node].zone_type == "priority":
                         total_cost += 0.8
+                        total_cost_stats += 1
 
-        self.total_cost = total_cost
+        self.total_cost = total_cost_stats
         self.total_drones = len(drones)
         self.avg_turns = (sum(d.path[-1][1] for d in drones) /
                           self.total_drones if self.total_drones else 0.0)
@@ -257,12 +272,12 @@ class Renderer:
                 True,
                 Colors.WHITE.value),
             (10, 10))
-        self.screen.blit(
-            self.large_font.render(
-                "Fly-in visualizer",
-                True,
-                Colors.WHITE.value),
-            (self.width // 2 - 100, 10))
+        # self.screen.blit(
+        #     self.large_font.render(
+        #         "Fly-in visualizer",
+        #         True,
+        #         Colors.WHITE.value),
+        #     (self.width // 2 - 100, 10))
 
     def _draw_connections(self) -> None:
         """
@@ -276,9 +291,17 @@ class Renderer:
                 p1 = self._get_pixel_coords(z1.x, z1.y)
                 p2 = self._get_pixel_coords(z2.x, z2.y)
                 pygame.draw.line(
-                    self.screen, Colors.WHITE.value, p1, p2, 5)
+                    self.screen, Colors.WHITE.value, p1, p2, 11)
                 pygame.draw.line(
-                    self.screen, (100, 100, 100), p1, p2, 3)
+                    self.screen, (100, 100, 100), p1, p2, 8)
+                mlc = self.small_font.render(f"{con.max_link_capacity}",
+                                             True, Colors.WHITE.value)
+                z_x = (p1[0] + p2[0]) // 2
+                z_y = (p1[1] + p2[1]) // 2
+                self.screen.blit(
+                        mlc,
+                        (z_x - mlc.get_width() // 2,
+                         z_y - mlc.get_height() // 2))
 
     def _draw_zones(self) -> None:
         """
@@ -401,7 +424,7 @@ class Renderer:
             ("Total Drones:", str(self.total_drones)),
             ("Active Drones:", str(getattr(self, 'active_drones', 0))),
             ("Avg Turns per drone:", f"{self.avg_turns:.1f}"),
-            ("Total Cost:", f"{self.total_cost:.1f}")
+            ("Total Cost:", f"{self.total_cost}")
         ]
 
         start_x = 40
@@ -422,7 +445,7 @@ class Renderer:
             ("[ESC]", "Quit")
         ]
 
-        ctrl_x = self.width // 2 + 50
+        ctrl_x = self.width - 320
         for i, (key, desc) in enumerate(controls):
             key_surf = self.hud_font.render(key, True, Colors.YELLOW.value)
             desc_surf = self.hud_font.render(desc, True, Colors.WHITE.value)
