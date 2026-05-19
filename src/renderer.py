@@ -418,7 +418,7 @@ class Renderer:
         controls = [
             ("[LEFT] / [RIGHT]", "Scrub Time"),
             ("[SPACE]", "Play / Pause"),
-            ("[R]", "Reset Simulation"),
+            ("[R]", "Reset"),
             ("[ESC]", "Quit")
         ]
 
