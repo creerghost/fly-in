@@ -54,7 +54,7 @@ make run FILE=maps/hard/02_capacity_hell.txt ARGS="--visual"
 ```
 
 > [!TIP]
-> When running with the visualizer, you can pause and resume the simulation at any time by pressing the **Space** bar.
+> When running with the visualizer, you can pause and resume the simulation at any time by pressing the **Space** bar, reset the simulation with **R**, or quit with **Esc**. You can also scrub through the simulation with the **Left** and **Right** arrow keys.
 
 Or run the simulator manually with specific maps:
 
@@ -292,6 +292,7 @@ make debug # runs the simulator with Python's pdb debugger
 make lint # flake8 and mypy type hint checking
 make lint-strict # strict version of mypy checker
 make clean # cleans the python caches and removes the virtual environment
+make help # displays all available commands
 ```
 
 These are helpful for checking the codebase and removing generated Python cache files.
