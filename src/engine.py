@@ -26,7 +26,7 @@ class Engine:
         """
         assert self.network.parser.start_hub is not None
         for i in range(self.network.parser.nb_drones):
-            drone = Drone(f"D{i}", self.network.parser.start_hub["name"])
+            drone = Drone(f"D{i + 1}", self.network.parser.start_hub["name"])
             self.drones.append(drone)
 
     def _plan_routes(self) -> None:

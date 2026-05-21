@@ -18,6 +18,7 @@ class Parser:
         self.connections: List[Dict[str, Any]] = []
         self._start_hub_count = 0
         self._end_hub_count = 0
+        self.zone_names: set[str] = set()
 
     def parse(self) -> None:
         """
@@ -58,19 +59,17 @@ class Parser:
             self._start_hub_count += 1
             self.start_hub = self._parse_zone_line(
                 line.replace("start_hub:", "").strip())
+            self.zone_names.add(self.start_hub["name"])
         elif line.startswith("end_hub:"):
             self._end_hub_count += 1
             self.end_hub = self._parse_zone_line(
                 line.replace("end_hub:", "").strip())
+            self.zone_names.add(self.end_hub["name"])
         elif line.startswith("hub:"):
-            self.hubs.append(self._parse_zone_line(
-                line.replace("hub:", "").strip()))
-        elif line.startswith("connection:") and (self.start_hub is None
-                                                 and self.end_hub is None
-                                                 and not self.hubs):
-            raise ValueError(f"Line {line_num}: "
-                             f"Connections must be defined after"
-                             f" start_hub and end_hub")
+            hub_data = self._parse_zone_line(
+                line.replace("hub:", "").strip())
+            self.hubs.append(hub_data)
+            self.zone_names.add(hub_data["name"])
         elif line.startswith("connection:"):
             self.connections.append(self._parse_connection_line(
                 line.replace("connection:", "").strip()))
@@ -82,6 +81,12 @@ class Parser:
         """
         Extract node data and metadata attributes from a zone string.
         """
+        if "[" in line or "]" in line:
+            if (line.count("[") != 1 or
+                    line.count("]") != 1 or
+                    not line.endswith("]")):
+                raise ValueError("Invalid metadata block syntax")
+
         parts = line.split("[")
         base_info = parts[0].strip().split()
         if len(base_info) != 3:
@@ -96,48 +101,107 @@ class Parser:
         }
 
         if len(parts) > 1:
-            if not parts[1].endswith("]"):
-                raise ValueError("Invalid syntax for zone line")
-            meta_items = parts[1].replace("]", "").strip().split()
+            meta_str = parts[1].replace("]", "").strip()
+            if not meta_str:
+                raise ValueError("Empty metadata block inside brackets")
+            meta_items = meta_str.split()
+            seen_keys = set()
+            allowed_keys = {"zone", "color", "max_drones"}
             for item in meta_items:
-                if "=" not in item:
-                    raise ValueError("Invalid syntax for zone line")
-                k, v = item.split("=", 1)
+                if "=" not in item or item.count("=") != 1:
+                    raise ValueError(f"Invalid metadata item syntax: "
+                                     f"'{item}'")
+                k, v = item.split("=")
+                k = k.strip()
+                v = v.strip()
+                if not k or not v:
+                    raise ValueError(f"Invalid metadata item: '{item}'")
+                if k in seen_keys:
+                    raise ValueError(f"Duplicate metadata key: '{k}'")
+                seen_keys.add(k)
+                if k not in allowed_keys:
+                    raise ValueError(f"Unknown zone metadata key: '{k}'")
+
                 if k == "zone":
                     data["zone_type"] = v
                 elif k == "color":
                     data["color"] = v
                 elif k == "max_drones":
-                    data["max_drones"] = int(v)
+                    try:
+                        max_d = int(v)
+                        if max_d <= 0:
+                            raise ValueError(f"max_drones must be a "
+                                             f"positive integer, got: {v}")
+                        data["max_drones"] = max_d
+                    except ValueError:
+                        raise ValueError(f"max_drones must be an "
+                                         f"integer, got: {v}")
         return data
 
     def _parse_connection_line(self, line: str) -> Dict[str, Any]:
         """
         Extract edge data and link capacity metadata from a connection string.
         """
+        if "[" in line or "]" in line:
+            if (line.count("[") != 1 or
+                    line.count("]") != 1 or
+                    not line.endswith("]")):
+                raise ValueError("Invalid metadata block syntax")
+
         parts = line.split("[")
         names = parts[0].strip().split("-")
 
         if len(names) != 2:
             raise ValueError(f"Invalid connection syntax: {line}")
 
+        z1 = names[0].strip()
+        z2 = names[1].strip()
+
+        if not z1 or not z2:
+            raise ValueError("Connection zone names cannot be empty")
+
+        if z1 not in self.zone_names or z2 not in self.zone_names:
+            raise ValueError(f"Connection {z1}-{z2} links to "
+                             f"undefined zone(s)")
+
         data: Dict[str, Any] = {
-            "name1": names[0],
-            "name2": names[1],
+            "name1": z1,
+            "name2": z2,
             "max_link_capacity": 1
         }
 
         if len(parts) > 1:
-            if not parts[1].endswith("]"):
-                raise ValueError("Invalid syntax for connection line")
-            meta_items = parts[1].replace("]", "").strip().split()
-
+            meta_str = parts[1].replace("]", "").strip()
+            if not meta_str:
+                raise ValueError("Empty metadata block inside brackets")
+            meta_items = meta_str.split()
+            seen_keys = set()
+            allowed_keys = {"max_link_capacity"}
             for item in meta_items:
-                if "=" not in item:
-                    raise ValueError("Invalid syntax for connection line")
-                k, v = item.split("=", 1)
+                if "=" not in item or item.count("=") != 1:
+                    raise ValueError(f"Invalid metadata item syntax: "
+                                     f"'{item}'")
+                k, v = item.split("=")
+                k = k.strip()
+                v = v.strip()
+                if not k or not v:
+                    raise ValueError(f"Invalid metadata item: '{item}'")
+                if k in seen_keys:
+                    raise ValueError(f"Duplicate metadata key: '{k}'")
+                seen_keys.add(k)
+                if k not in allowed_keys:
+                    raise ValueError(f"Unknown connection metadata key: '{k}'")
+
                 if k == "max_link_capacity":
-                    data["max_link_capacity"] = int(v)
+                    try:
+                        max_c = int(v)
+                        if max_c <= 0:
+                            raise ValueError(f"max_link_capacity must be "
+                                             f"a positive integer, got: {v}")
+                        data["max_link_capacity"] = max_c
+                    except ValueError:
+                        raise ValueError(f"max_link_capacity must be "
+                                         f"an integer, got: {v}")
         return data
 
     # def _validate(self) -> None:
