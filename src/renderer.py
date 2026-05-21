@@ -60,7 +60,6 @@ class Renderer:
             * self.tile_size + 2 * self.margin + self.panel_height
         self._extend_width()
         # self._adjust_tile_size()
-        print(self.width, self.height)
         self.current_time = 0.0
         # ensures turn outputs are printed only when going forward in time
         self.highest_turn_printed = 0
@@ -74,9 +73,6 @@ class Renderer:
         self.drone_img = pygame.transform.scale(
             pygame.image.load(os.path.join("imgs", "drone.bmp")), (45, 45)
         )
-
-    # def _adjust_tile_size(self) -> None:
-    #     self.tile_size *= (1920 + self.width) // self.tile_size
 
     def _extend_width(self) -> None:
         width = 650 - self.width
@@ -103,14 +99,20 @@ class Renderer:
         """
         Convert grid coordinates to Pygame pixel coordinates.
         """
-        px = (x - self.canvas_min_x) * self.tile_size + self.margin
-        py = (self.canvas_max_y - y) * self.tile_size + self.margin
+        grid_center_x = (self.canvas_min_x + self.canvas_max_x) / 2
+        grid_center_y = (self.canvas_min_y + self.canvas_max_y) / 2
+
+        screen_center_x = self.width / 2
+        screen_center_y = (self.height - self.panel_height) / 2
+
+        px = (x - grid_center_x) * self.tile_size + screen_center_x
+        py = (grid_center_y - y) * self.tile_size + screen_center_y
 
         # chessboard offset to prevent connection overlaps
         px += 30 if y % 2 == 0 else -10
         py += 30 if x % 2 != 0 else -10
 
-        return px, py
+        return int(px), int(py)
 
     def _draw_drone_marker(
         self, px: int, py: int, drones_list: List[Drone],
