@@ -29,8 +29,16 @@ class Parser:
                     line = line.strip()
                     if not line or line.startswith('#'):
                         continue
+                    if not line.startswith("nb_drones") and not self.nb_drones:
+                        raise ValueError(f"Line {l_num}: "
+                                         f"nb_drones must be defined "
+                                         f"before any zones")
                     self._parse_line(line, l_num)
             # self._validate()
+            if self._start_hub_count != 1:
+                raise ValueError("Only one start_hub is allowed")
+            if self._end_hub_count != 1:
+                raise ValueError("Only one end_hub is allowed")
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")
         except ValueError as e:
@@ -57,6 +65,12 @@ class Parser:
         elif line.startswith("hub:"):
             self.hubs.append(self._parse_zone_line(
                 line.replace("hub:", "").strip()))
+        elif line.startswith("connection:") and (self.start_hub is None
+                                                 and self.end_hub is None
+                                                 and not self.hubs):
+            raise ValueError(f"Line {line_num}: "
+                             f"Connections must be defined after"
+                             f" start_hub and end_hub")
         elif line.startswith("connection:"):
             self.connections.append(self._parse_connection_line(
                 line.replace("connection:", "").strip()))
@@ -82,17 +96,19 @@ class Parser:
         }
 
         if len(parts) > 1:
+            if not parts[1].endswith("]"):
+                raise ValueError("Invalid syntax for zone line")
             meta_items = parts[1].replace("]", "").strip().split()
-
             for item in meta_items:
-                if "=" in item:
-                    k, v = item.split("=", 1)
-                    if k == "zone":
-                        data["zone_type"] = v
-                    elif k == "color":
-                        data["color"] = v
-                    elif k == "max_drones":
-                        data["max_drones"] = int(v)
+                if "=" not in item:
+                    raise ValueError("Invalid syntax for zone line")
+                k, v = item.split("=", 1)
+                if k == "zone":
+                    data["zone_type"] = v
+                elif k == "color":
+                    data["color"] = v
+                elif k == "max_drones":
+                    data["max_drones"] = int(v)
         return data
 
     def _parse_connection_line(self, line: str) -> Dict[str, Any]:
@@ -112,13 +128,16 @@ class Parser:
         }
 
         if len(parts) > 1:
+            if not parts[1].endswith("]"):
+                raise ValueError("Invalid syntax for connection line")
             meta_items = parts[1].replace("]", "").strip().split()
 
             for item in meta_items:
-                if "=" in item:
-                    k, v = item.split("=", 1)
-                    if k == "max_link_capacity":
-                        data["max_link_capacity"] = int(v)
+                if "=" not in item:
+                    raise ValueError("Invalid syntax for connection line")
+                k, v = item.split("=", 1)
+                if k == "max_link_capacity":
+                    data["max_link_capacity"] = int(v)
         return data
 
     # def _validate(self) -> None:

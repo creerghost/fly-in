@@ -59,7 +59,6 @@ class Renderer:
         self.height = (self.canvas_max_y - self.canvas_min_y) \
             * self.tile_size + 2 * self.margin + self.panel_height
         self._extend_width()
-        # self._adjust_tile_size()
         self.current_time = 0.0
         # ensures turn outputs are printed only when going forward in time
         self.highest_turn_printed = 0
