@@ -9,16 +9,16 @@ class Engine:
     and turn-by-turn execution.
     """
     def __init__(self, network: Network, visualize: bool = False,
-                 delay: float = 0.5) -> None:
+                 play_speed: float = 1) -> None:
         self.network = network
         self.reservations = ReservationTable()
         self.pathfinder = SpaceTimePathfinder(network, self.reservations)
         self.drones: list[Drone] = []
         self.visualize = visualize
-        self.delay = delay
+        self.play_speed = play_speed
         if self.visualize:
             from src.renderer import Renderer
-            self.renderer = Renderer(self.network, self.delay)
+            self.renderer = Renderer(self.network, self.play_speed)
 
     def _init_drones(self) -> None:
         """
@@ -45,8 +45,9 @@ class Engine:
 
     def run(self) -> None:
         """
-        Run the main simulation loop turn-by-turn until all drones reach their
-        destination.
+        Run the simulation by initializing drones and planning routes.
+        If visualization is enabled, control is handed over to the renderer.
+        Otherwise, executes a turn-by-turn console simulation.
         """
         self._init_drones()
         self._plan_routes()
@@ -54,7 +55,8 @@ class Engine:
         turn = 1
 
         if self.visualize:
-            self.renderer.animate_turn(turn, self.drones, [])
+            self.renderer.run(self.drones)
+            # self.renderer.animate_turn(turn, self.drones, [])
 
         while True:
             all_finished = True
@@ -101,9 +103,7 @@ class Engine:
                         break
 
             if turn_output:
-                if self.visualize:
-                    self.renderer.animate_turn(turn, self.drones, turn_output)
-                else:
+                if not self.visualize:
                     print(" ".join(turn_output))
 
             if all_finished:

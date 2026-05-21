@@ -46,22 +46,22 @@ You can also override the default map or simulation arguments by passing flags t
 # Run a specific map
 make run FILE=maps/hard/02_capacity_hell.txt
 
-# Run with custom arguments (e.g., visualizer enabled, 0.2s delay)
-make run ARGS="--visual --delay=0.2"
+# Run with custom arguments (e.g., visualizer enabled, 2.0x playback speed)
+make run ARGS="--visual --speed=2.0"
 
 # Override both
 make run FILE=maps/hard/02_capacity_hell.txt ARGS="--visual"
 ```
 
 > [!TIP]
-> When running with the visualizer, you can pause and resume the simulation at any time by pressing the **Space** bar.
+> When running with the visualizer, you can pause and resume the simulation at any time by pressing the **Space** bar, reset the simulation with **R**, or quit with **Esc**. You can also scrub through the simulation with the **Left** and **Right** arrow keys.
 
 Or run the simulator manually with specific maps:
 
 ```bash
 python3 fly_in.py maps/easy/01_linear_path.txt
 python3 fly_in.py maps/medium/03_priority_puzzle.txt --visual
-python3 fly_in.py maps/hard/02_capacity_hell.txt --visual --delay 0.2
+python3 fly_in.py maps/hard/02_capacity_hell.txt --visual --speed 2.0
 ```
 
 ### Map format
@@ -246,7 +246,9 @@ The optional visualizer opens a live Pygame window that brings the simulation to
   - **In Node:** When a drone is resting or acting inside a zone, its marker is drawn hovering slightly above the node (`py - 25`), wrapped in a bright red rectangle.
   - **In Transit:** When a drone is moving between two zones, its position is animated along the segment and rendered in gray while the move is in progress.
 - **Drone Graphics:** Each marker uses a custom loaded image bitmap (`imgs/drone.bmp`), scaled to 45x45 pixels and layered underneath dynamically grouped text labels (e.g. `2D` if two drones occupy the same spot).
-- **Responsive Window Loop:** The visualizer processes quit, escape, and pause events on every frame so the animation stays interactive while it plays.
+- **Interactive Scrubbing & Playback:** You can pause the simulation at any time using `Space`, physically scrub time forward and backward using the `Left` and `Right` arrow keys, or instantly reset back to the beginning using the `R` key.
+- **Heads-Up Display (HUD):** A dedicated panel at the bottom of the screen displays real-time analytics, including the total number of drones, average turns per drone, total path cost, and exactly how many drones are actively moving at the current moment in time.
+- **Responsive Window Loop:** The visualizer handles interaction events on every frame so the animation stays completely smooth while playing at custom speeds configured by `--speed`.
 
 ### Advantages
 
@@ -257,7 +259,7 @@ This level of visual feedback improves understanding in three main ways:
 
 The animated renderer also makes short moves easier to follow, since each drone eases into and out of a turn instead of snapping instantly to the next location.
 
-The visualizer also supports pause and resume with the space bar, and quitting with Escape or the window close button.
+The visualizer also supports pause and resume with the `Space` bar, resetting with `R`, and quitting with `Escape` or the window close button.
 
 ### Disadvantages
 
@@ -290,6 +292,7 @@ make debug # runs the simulator with Python's pdb debugger
 make lint # flake8 and mypy type hint checking
 make lint-strict # strict version of mypy checker
 make clean # cleans the python caches and removes the virtual environment
+make help # displays all available commands
 ```
 
 These are helpful for checking the codebase and removing generated Python cache files.

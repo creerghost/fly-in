@@ -13,13 +13,9 @@ def main() -> None:
     argparser.add_argument("filename", help="Path to the map file")
     argparser.add_argument("--visual", action="store_true",
                            help="Enable the live terminal visualizer")
-    argparser.add_argument("--delay", type=float, default=0.5,
-                           help="Setup delay for the visualizer")
+    argparser.add_argument("--speed", type=float, default=1,
+                           help="Set up the speed of the animation")
     args = argparser.parse_args()
-
-    if args.delay < 0:
-        print("Error: Delay must be a non-negative value.")
-        sys.exit(1)
 
     try:
         parser = Parser(args.filename)
@@ -33,7 +29,7 @@ def main() -> None:
 
     try:
         network = Network(parser)
-        engine = Engine(network, visualize=args.visual, delay=args.delay)
+        engine = Engine(network, visualize=args.visual, play_speed=args.speed)
         engine.run()
     except Exception as e:
         print(f"Error: {e}")

@@ -5,8 +5,8 @@ PYTHON_VENV = $(VENV)/bin/python
 MAIN = fly_in.py
 
 FLAGS ?=
-FILE ?=
-ARGS ?= --visual --delay=1
+FILE ?= $(file)
+ARGS ?= --visual
 
 $(VENV)/bin/activate: requirements.txt
 	$(PYTHON_SYS) -m venv $(VENV)
@@ -69,3 +69,19 @@ lint-strict: venv
 	$(PYTHON_VENV) -m flake8 . --exclude=$(VENV)
 	$(PYTHON_VENV) -m mypy . --exclude $(VENV) --strict
 	@echo "done!"
+
+help:
+	@echo "Available commands:"
+	@echo "  run: Run the simulation with visualizer"
+	@echo "  debug: Run the simulation in debug mode"
+	@echo "  clean: Clean the project"
+	@echo "  lint: Run linters"
+	@echo "  lint-strict: Run strict linters"
+	@echo ""
+	@echo "Optional arguments:"
+	@echo "  FILE=path/to/map: Specify a map file"
+	@echo "  ARGS='--visual --speed=2.0': Specify additional arguments"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make run FILE=maps/challenge/01_the_impossible_dream.txt"
+	@echo "  make run FILE=maps/challenge/01_the_impossible_dream.txt ARGS='--visual --speed=2.0'"
