@@ -174,7 +174,7 @@ class SpaceTimePathfinder:
         returning a list of (zone_name, turn) states if a path exists.
         """
         start_state = TemporalState(
-            f_cost=0.0,
+            f_cost=0.0,  # stack will be sorted by THIS value
             g_cost=0.0,
             h_cost=self._calculate_h(start_zone, end_zone),
             turn=0,
