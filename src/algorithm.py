@@ -186,6 +186,7 @@ class SpaceTimePathfinder:
         heappush(open_set, start_state)
 
         while open_set:
+            # it will pop the item with the smallest f_cost
             current_state = heappop(open_set)
 
             if current_state.zone_name == end_zone:
