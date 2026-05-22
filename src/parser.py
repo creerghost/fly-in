@@ -42,6 +42,8 @@ class Parser:
                 raise ValueError("Only one end_hub is allowed")
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")
+        except IsADirectoryError:
+            raise IsADirectoryError(f"'{self.filepath}' is a directory")
         except ValueError as e:
             raise ValueError(f"Line {l_num}: {e}")
 

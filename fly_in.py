@@ -20,10 +20,7 @@ def main() -> None:
     try:
         parser = Parser(args.filename)
         parser.parse()
-    except ValueError as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-    except FileNotFoundError as e:
+    except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
 
