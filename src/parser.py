@@ -95,11 +95,8 @@ class Parser:
             raise ValueError("Invalid syntax for zone line")
         data: Dict[str, Any] = {
             "name": base_info[0],
-            "x": int(base_info[1]),
-            "y": int(base_info[2]),  # catch errors when wrong imputs later
-            "zone_type": "normal",
-            "color": None,
-            "max_drones": 1
+            "x": base_info[1],
+            "y": base_info[2],
         }
 
         if len(parts) > 1:
@@ -107,37 +104,12 @@ class Parser:
             if not meta_str:
                 raise ValueError("Empty metadata block inside brackets")
             meta_items = meta_str.split()
-            seen_keys = set()
-            allowed_keys = {"zone", "color", "max_drones"}
             for item in meta_items:
                 if "=" not in item or item.count("=") != 1:
                     raise ValueError(f"Invalid metadata item syntax: "
                                      f"'{item}'")
                 k, v = item.split("=")
-                k = k.strip()
-                v = v.strip()
-                if not k or not v:
-                    raise ValueError(f"Invalid metadata item: '{item}'")
-                if k in seen_keys:
-                    raise ValueError(f"Duplicate metadata key: '{k}'")
-                seen_keys.add(k)
-                if k not in allowed_keys:
-                    raise ValueError(f"Unknown zone metadata key: '{k}'")
-
-                if k == "zone":
-                    data["zone_type"] = v
-                elif k == "color":
-                    data["color"] = v
-                elif k == "max_drones":
-                    try:
-                        max_d = int(v)
-                        if max_d <= 0:
-                            raise ValueError(f"max_drones must be a "
-                                             f"positive integer, got: {v}")
-                        data["max_drones"] = max_d
-                    except ValueError:
-                        raise ValueError(f"max_drones must be an "
-                                         f"integer, got: {v}")
+                data[k.strip()] = v.strip()
         return data
 
     def _parse_connection_line(self, line: str) -> Dict[str, Any]:
@@ -169,7 +141,6 @@ class Parser:
         data: Dict[str, Any] = {
             "name1": z1,
             "name2": z2,
-            "max_link_capacity": 1
         }
 
         if len(parts) > 1:
@@ -177,77 +148,12 @@ class Parser:
             if not meta_str:
                 raise ValueError("Empty metadata block inside brackets")
             meta_items = meta_str.split()
-            seen_keys = set()
-            allowed_keys = {"max_link_capacity"}
             for item in meta_items:
                 if "=" not in item or item.count("=") != 1:
                     raise ValueError(f"Invalid metadata item syntax: "
                                      f"'{item}'")
                 k, v = item.split("=")
-                k = k.strip()
-                v = v.strip()
-                if not k or not v:
-                    raise ValueError(f"Invalid metadata item: '{item}'")
-                if k in seen_keys:
-                    raise ValueError(f"Duplicate metadata key: '{k}'")
-                seen_keys.add(k)
-                if k not in allowed_keys:
-                    raise ValueError(f"Unknown connection metadata key: '{k}'")
-
-                if k == "max_link_capacity":
-                    try:
-                        max_c = int(v)
-                        if max_c <= 0:
-                            raise ValueError(f"max_link_capacity must be "
-                                             f"a positive integer, got: {v}")
-                        data["max_link_capacity"] = max_c
-                    except ValueError:
-                        raise ValueError(f"max_link_capacity must be "
-                                         f"an integer, got: {v}")
+                data[k.strip()] = v.strip()
         return data
 
-    # def _validate(self) -> None:
-    #     """
-    #     Validate all parsed data against project constraints
-    #     (unique hubs, capacities, etc).
-    #     """
-    #     if self.nb_drones <= 0:
-    #         raise ValueError("nb_drones must be a positive integer")
-    #     if self.start_hub is None:
-    #         raise ValueError("Missing start_hub")
-    #     if self.end_hub is None:
-    #         raise ValueError("Missing end_hub")
-    #     if self._start_hub_count != 1:
-    #         raise ValueError("Only one start_hub is allowed")
-    #     if self._end_hub_count != 1:
-    #         raise ValueError("Only one end_hub is allowed")
 
-    #     zone_names = set()
-    #     valid_types = {"normal", "blocked", "restricted", "priority"}
-    #     all_hubs = [self.start_hub, self.end_hub] + self.hubs
-    #     for hub in all_hubs:
-    #         if "-" in hub["name"]:
-    #             raise ValueError(f"Zone name should not contain dashes"
-    #                              f": {hub["name"]}")
-    #         if hub["max_drones"] <= 0:
-    #             raise ValueError("max_drones must be a positive integer")
-    #         if hub["name"] in zone_names:
-    #             raise ValueError(f"Duplicate zone name found: {hub["name"]}")
-    #         zone_names.add(hub["name"])
-    #         if hub["zone_type"] not in valid_types:
-    #             raise ValueError(f"Invalid zone type: for"
-    #                              f" {hub["name"]}: {hub["zone_type"]}")
-
-    #     seen_connections = set()
-    #     for con in self.connections:
-    #         if con["max_link_capacity"] <= 0:
-    #             raise ValueError("max_link_capacity must be "
-    #                              "a positive integer")
-    #         z1, z2 = con["name1"], con["name2"]
-    #         if z1 not in zone_names or z2 not in zone_names:
-    #             raise ValueError(f"Connection {z1}-{z2} links "
-    #                              f"to undefined zone(s)")
-    #         conn_tuple = tuple(sorted([z1, z2]))
-    #         if conn_tuple in seen_connections:
-    #             raise ValueError(f"Duplicate connection found: {z1}-{z2}")
-    #         seen_connections.add(conn_tuple)

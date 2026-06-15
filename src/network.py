@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple, Self, Set
 from src.parser import Parser
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 from enum import StrEnum
 
 
@@ -19,12 +19,14 @@ class Zone(BaseModel):
     Represents a specific geographic location in the network
     that drones can travel between.
     """
+    model_config = ConfigDict(extra='forbid', populate_by_name=True)
+
     name: str
     x: int
     y: int
-    zone_type: ZoneType = Field(default=ZoneType.NORMAL)
+    zone_type: ZoneType = Field(default=ZoneType.NORMAL, alias="zone")
     color: str | None = Field(default=None)
-    max_drones: int = Field(gt=0)
+    max_drones: int = Field(default=1, gt=0)
     current_drones: int = Field(default=0)
 
     @model_validator(mode="after")
@@ -44,6 +46,8 @@ class Connection(BaseModel):
     Represents a navigable path or link between two zones
     with a specific traffic capacity.
     """
+    model_config = ConfigDict(extra='forbid')
+
     name1: str
     name2: str
     max_link_capacity: int = Field(default=1, gt=0)
