@@ -155,5 +155,3 @@ class Parser:
                 k, v = item.split("=")
                 data[k.strip()] = v.strip()
         return data
-
-
