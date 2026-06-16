@@ -26,9 +26,15 @@ let animProgress = 1;      // 0..1 animation between turns
 let animFrameId = null;
 let lastFrameTime = 0;
 
+// ── Zoom & Pan ──
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let panStartX = 0;
+let panStartY = 0;
+
 // ── Config ──
-const ZONE_RADIUS = 22;
-const DRONE_RADIUS = 8;
 const DRONE_COLORS = [
     '#00d4ff', '#ff6b6b', '#ffd93d', '#6bcb77',
     '#a855f7', '#ff8c42', '#4ecdc4', '#ff69b4',
@@ -40,6 +46,24 @@ const ZONE_TYPE_COLORS = {
     restricted: '#a855f7',
     priority: '#00d4ff'
 };
+
+// Dynamic sizing based on map complexity
+let zoneRadius = 22;
+let droneRadius = 8;
+let isLargeMap = false;
+let isMediumMap = false;
+
+function updateSizing() {
+    if (!simData) return;
+    const n = simData.zones.length;
+    if (n > 30) {
+        zoneRadius = 10; droneRadius = 5; isLargeMap = true; isMediumMap = true;
+    } else if (n > 15) {
+        zoneRadius = 16; droneRadius = 6; isLargeMap = false; isMediumMap = true;
+    } else {
+        zoneRadius = 22; droneRadius = 8; isLargeMap = false; isMediumMap = false;
+    }
+}
 
 // ── Resize canvas ──
 function resizeCanvas() {
@@ -99,10 +123,12 @@ async function runSimulation() {
 // ── Post-simulation setup ──
 function onSimulationComplete() {
     setStatus('Complete', '');
+    updateSizing();
     computeZonePositions();
     buildDroneStates();
     currentTurn = 0;
     animProgress = 1;
+    zoom = 1; panX = 0; panY = 0;
 
     // Stats
     document.getElementById('stat-drones').textContent = simData.nb_drones;
@@ -201,9 +227,22 @@ function cloneState(s) {
 function drawFrame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
+    // Apply zoom & pan for graph content
+    ctx.save();
+    ctx.translate(panX, panY);
+    ctx.scale(zoom, zoom);
     drawConnections();
     drawZones();
     drawDrones();
+    ctx.restore();
+    // Zoom indicator
+    if (zoom !== 1) {
+        ctx.font = '11px Inter';
+        ctx.fillStyle = 'rgba(100, 116, 139, 0.6)';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText(`${Math.round(zoom * 100)}%`, canvas.width - 12, 12);
+    }
 }
 
 function drawGrid() {
@@ -228,21 +267,25 @@ function drawConnections() {
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = 'rgba(100, 116, 139, 0.35)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = isLargeMap ? 'rgba(100, 116, 139, 0.2)' : 'rgba(100, 116, 139, 0.35)';
+        ctx.lineWidth = isLargeMap ? 1 : 2;
         ctx.stroke();
 
-        // capacity label
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
-        ctx.font = '10px Inter';
-        ctx.fillStyle = 'rgba(100, 116, 139, 0.5)';
-        ctx.textAlign = 'center';
-        ctx.fillText(`cap:${conn.capacity}`, mx, my - 6);
+        // capacity label — only on small maps
+        if (!isMediumMap) {
+            const mx = (a.x + b.x) / 2;
+            const my = (a.y + b.y) / 2;
+            ctx.font = '10px Inter';
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.5)';
+            ctx.textAlign = 'center';
+            ctx.fillText(`cap:${conn.capacity}`, mx, my - 6);
+        }
     }
 }
 
 function drawZones() {
+    const labelSize = isLargeMap ? 8 : isMediumMap ? 10 : 12;
+
     for (const [name, pos] of Object.entries(zonePositions)) {
         const z = pos.zone;
         const isStart = z.role === 'start';
@@ -251,7 +294,7 @@ function drawZones() {
 
         // Glow
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, ZONE_RADIUS + 4, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, zoneRadius + 3, 0, Math.PI * 2);
         ctx.fillStyle = (isStart || isEnd)
             ? `rgba(${isStart ? '34,197,94' : '245,158,11'}, 0.15)`
             : `${color}11`;
@@ -259,30 +302,36 @@ function drawZones() {
 
         // Circle
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, ZONE_RADIUS, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, zoneRadius, 0, Math.PI * 2);
         ctx.fillStyle = '#0d1220';
         ctx.fill();
         ctx.strokeStyle = isStart ? '#22c55e' : isEnd ? '#f59e0b' : color;
-        ctx.lineWidth = isStart || isEnd ? 3 : 2;
+        ctx.lineWidth = isStart || isEnd ? 2.5 : (isLargeMap ? 1.5 : 2);
         ctx.stroke();
 
-        // Icon for start/end
-        ctx.font = isStart || isEnd ? 'bold 13px Inter' : '11px Inter';
-        ctx.fillStyle = isStart ? '#22c55e' : isEnd ? '#f59e0b' : color;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(isStart ? '▶' : isEnd ? '◎' : '', pos.x, pos.y);
+        // Icon for start/end (only on non-large maps)
+        if (!isLargeMap) {
+            ctx.font = isStart || isEnd ? 'bold 13px Inter' : '11px Inter';
+            ctx.fillStyle = isStart ? '#22c55e' : isEnd ? '#f59e0b' : color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(isStart ? '▶' : isEnd ? '◎' : '', pos.x, pos.y);
+        }
 
         // Label
-        ctx.font = '500 12px Inter';
+        ctx.font = `500 ${labelSize}px Inter`;
         ctx.fillStyle = '#e2e8f0';
+        ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText(name, pos.x, pos.y + ZONE_RADIUS + 8);
+        const shortName = isLargeMap && name.length > 6 ? name.slice(0, 5) + '…' : name;
+        ctx.fillText(shortName, pos.x, pos.y + zoneRadius + 4);
 
-        // Zone type badge
-        ctx.font = '9px Inter';
-        ctx.fillStyle = 'rgba(100, 116, 139, 0.6)';
-        ctx.fillText(z.type, pos.x, pos.y + ZONE_RADIUS + 22);
+        // Zone type badge — only on small maps
+        if (!isMediumMap) {
+            ctx.font = '9px Inter';
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.6)';
+            ctx.fillText(z.type, pos.x, pos.y + zoneRadius + 18);
+        }
     }
 }
 
@@ -313,6 +362,7 @@ function drawDrones() {
         if (!toPos) return;
 
         let x, y;
+        const r = droneRadius;
 
         if (animProgress < 1 && fromPos) {
             // Smoothly interpolate from previous position to current
@@ -332,34 +382,39 @@ function drawDrones() {
         if (samePos.length > 1) {
             const myIdx = samePos.indexOf(id);
             const angle = (myIdx / samePos.length) * Math.PI * 2 - Math.PI / 2;
-            x += Math.cos(angle) * 14;
-            y += Math.sin(angle) * 14;
+            const spread = isLargeMap ? 8 : 14;
+            x += Math.cos(angle) * spread;
+            y += Math.sin(angle) * spread;
         }
 
         // Glow
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, DRONE_RADIUS * 3);
-        grad.addColorStop(0, color + '40');
-        grad.addColorStop(1, color + '00');
-        ctx.beginPath();
-        ctx.arc(x, y, DRONE_RADIUS * 3, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
+        if (!isLargeMap) {
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
+            grad.addColorStop(0, color + '40');
+            grad.addColorStop(1, color + '00');
+            ctx.beginPath();
+            ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
 
         // Drone circle
         ctx.beginPath();
-        ctx.arc(x, y, DRONE_RADIUS, 0, Math.PI * 2);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
         ctx.strokeStyle = '#0d1220';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = isLargeMap ? 1 : 2;
         ctx.stroke();
 
-        // Label
-        ctx.font = 'bold 9px Inter';
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(id, x, y);
+        // Label — hide on large maps
+        if (!isLargeMap) {
+            ctx.font = `bold ${isMediumMap ? 7 : 9}px Inter`;
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(id, x, y);
+        }
     });
 }
 
@@ -520,3 +575,54 @@ mapInput.addEventListener('input', () => { mapSelect.value = ''; });
 
 // Load maps on startup
 loadMapList();
+
+// ── Zoom & Pan ──
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const oldZoom = zoom;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    zoom = Math.max(0.2, Math.min(10, zoom * delta));
+
+    // Zoom toward cursor
+    panX = mx - (mx - panX) * (zoom / oldZoom);
+    panY = my - (my - panY) * (zoom / oldZoom);
+
+    drawFrame();
+}, { passive: false });
+
+canvas.addEventListener('mousedown', (e) => {
+    isPanning = true;
+    panStartX = e.clientX - panX;
+    panStartY = e.clientY - panY;
+    canvas.style.cursor = 'grabbing';
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    panX = e.clientX - panStartX;
+    panY = e.clientY - panStartY;
+    drawFrame();
+});
+
+canvas.addEventListener('mouseup', () => {
+    isPanning = false;
+    canvas.style.cursor = 'grab';
+});
+
+canvas.addEventListener('mouseleave', () => {
+    isPanning = false;
+    canvas.style.cursor = '';
+});
+
+// Double-click to reset zoom
+canvas.addEventListener('dblclick', () => {
+    zoom = 1; panX = 0; panY = 0;
+    drawFrame();
+});
+
+// Set default cursor on canvas
+canvas.style.cursor = 'grab';
