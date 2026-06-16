@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from src.drone import Drone
 from src.algorithm import ReservationTable, SpaceTimePathfinder
 from src.network import Network
@@ -43,7 +44,7 @@ class Engine:
             self.reservations.register_path(path)
             drone.path = path
 
-    def _execute_turns(self) -> None:
+    def _execute_turns(self) -> Generator[tuple[int, list[str]], None, None]:
         """
         Generator that computes and yields turn-by-turn drone movements.
         Each yield is a tuple of (turn_number, list_of_movement_strings).
