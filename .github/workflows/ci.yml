@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, product]
+  pull_request:
+    branches: [main, product]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run flake8
+        run: python -m flake8 . --exclude=venv
+
+      - name: Run mypy
+        run: python -m mypy . --exclude venv --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+
+      - name: Smoke test — CLI simulation
+        run: python fly_in.py maps/easy/00_minimal.txt
+
+      - name: Smoke test — API endpoint
+        run: |
+          python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 &
+          sleep 2
+          curl -s http://127.0.0.1:8000/ | python -m json.tool
+          curl -s -X POST http://127.0.0.1:8000/runs \
+            -H "Content-Type: application/json" \
+            -d '{"map_content": "nb_drones: 2\nstart_hub: start 0 0 [zone=normal max_drones=2]\nhub: a 2 0 [zone=normal]\nend_hub: goal 4 0 [zone=normal]\nconnection: start-a\nconnection: a-goal"}' | python -m json.tool
+          kill %1
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t fly-in-api .
