@@ -37,7 +37,7 @@ jobs:
         run: |
           python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 &
           sleep 2
-          curl -s http://127.0.0.1:8000/ | python -m json.tool
+          curl -s http://127.0.0.1:8000/health | python -m json.tool
           curl -s -X POST http://127.0.0.1:8000/runs \
             -H "Content-Type: application/json" \
             -d '{"map_content": "nb_drones: 2\nstart_hub: start 0 0 [zone=normal max_drones=2]\nhub: a 2 0 [zone=normal]\nend_hub: goal 4 0 [zone=normal]\nconnection: start-a\nconnection: a-goal"}' | python -m json.tool
