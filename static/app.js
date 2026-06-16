@@ -474,3 +474,49 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') goToTurn(currentTurn + 1);
     if (e.key === 'ArrowLeft') goToTurn(currentTurn - 1);
 });
+
+// ── Map Selector ──
+const mapSelect = document.getElementById('map-select');
+
+async function loadMapList() {
+    try {
+        const res = await fetch('/maps');
+        const data = await res.json();
+        const groups = {};
+        for (const m of data.maps) {
+            if (!groups[m.category]) groups[m.category] = [];
+            groups[m.category].push(m);
+        }
+        for (const [category, maps] of Object.entries(groups)) {
+            const group = document.createElement('optgroup');
+            group.label = category.charAt(0).toUpperCase() + category.slice(1);
+            for (const m of maps) {
+                const opt = document.createElement('option');
+                opt.value = m.path;
+                opt.textContent = m.name;
+                group.appendChild(opt);
+            }
+            mapSelect.appendChild(group);
+        }
+    } catch (e) {
+        console.error('Failed to load map list:', e);
+    }
+}
+
+mapSelect.addEventListener('change', async () => {
+    const path = mapSelect.value;
+    if (!path) return;
+    try {
+        const res = await fetch(`/maps/${path}`);
+        const data = await res.json();
+        mapInput.value = data.content;
+    } catch (e) {
+        showError('Failed to load map: ' + e.message);
+    }
+});
+
+// Reset dropdown when user types in textarea
+mapInput.addEventListener('input', () => { mapSelect.value = ''; });
+
+// Load maps on startup
+loadMapList();

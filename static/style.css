@@ -156,6 +156,44 @@ textarea:focus {
     box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
+/* ── Map Selector ── */
+.map-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.map-select:hover { border-color: var(--border-hover); }
+.map-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.map-select optgroup {
+    color: var(--accent);
+    font-weight: 600;
+    font-style: normal;
+}
+
+.map-select option {
+    background: var(--bg-secondary);
+    color: var(--text);
+    padding: 6px;
+}
+
 /* ── Button ── */
 .btn-primary {
     display: flex;

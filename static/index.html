@@ -26,6 +26,13 @@
     <main id="app-main">
         <aside class="panel" id="input-panel">
             <div class="panel-section">
+                <label class="panel-label" for="map-select">Load Map</label>
+                <select id="map-select" class="map-select">
+                    <option value="">— Custom —</option>
+                </select>
+            </div>
+
+            <div class="panel-section">
                 <label class="panel-label" for="map-input">Map Configuration</label>
                 <textarea id="map-input" spellcheck="false" placeholder="Paste your map file content here...">nb_drones: 3
 start_hub: start 0 0 [zone=normal max_drones=3]
