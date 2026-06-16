@@ -43,21 +43,12 @@ class Engine:
             self.reservations.register_path(path)
             drone.path = path
 
-    def run(self) -> None:
+    def _execute_turns(self) -> None:
         """
-        Run the simulation by initializing drones and planning routes.
-        If visualization is enabled, control is handed over to the renderer.
-        Otherwise, executes a turn-by-turn console simulation.
+        Generator that computes and yields turn-by-turn drone movements.
+        Each yield is a tuple of (turn_number, list_of_movement_strings).
         """
-        self._init_drones()
-        self._plan_routes()
-
         turn = 1
-
-        if self.visualize:
-            self.renderer.run(self.drones)
-            # self.renderer.animate_turn(turn, self.drones, [])
-
         while True:
             all_finished = True
             turn_output = []
@@ -103,9 +94,36 @@ class Engine:
                         break
 
             if turn_output:
-                if not self.visualize:
-                    print(" ".join(turn_output))
+                yield (turn, turn_output)
 
             if all_finished:
                 break
             turn += 1
+
+    def run(self) -> None:
+        """
+        Run the simulation by initializing drones and planning routes.
+        If visualization is enabled, control is handed over to the renderer.
+        Otherwise, executes a turn-by-turn console simulation.
+        """
+        self._init_drones()
+        self._plan_routes()
+
+        if self.visualize:
+            self.renderer.run(self.drones)
+
+        for turn, movements in self._execute_turns():
+            if not self.visualize:
+                print(" ".join(movements))
+
+    def run_and_collect(self) -> list:
+        """
+        Run the simulation and return turn data as a list
+        instead of printing to the console. Used by the API.
+        """
+        self._init_drones()
+        self._plan_routes()
+        turns = []
+        for turn, movements in self._execute_turns():
+            turns.append({"turn": turn, "movements": movements})
+        return turns

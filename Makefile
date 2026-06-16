@@ -70,6 +70,9 @@ lint-strict: venv
 	$(PYTHON_VENV) -m mypy . --exclude $(VENV) --strict
 	@echo "done!"
 
+run-api: venv
+	$(PYTHON_VENV) -m uvicorn api.main:app --reload
+
 help:
 	@echo "Available commands:"
 	@echo "  run: Run the simulation with visualizer"
@@ -77,6 +80,7 @@ help:
 	@echo "  clean: Clean the project"
 	@echo "  lint: Run linters"
 	@echo "  lint-strict: Run strict linters"
+	@echo "  run-api: Run the API server"
 	@echo ""
 	@echo "Optional arguments:"
 	@echo "  FILE=path/to/map: Specify a map file"

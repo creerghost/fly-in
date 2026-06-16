@@ -1,11 +1,11 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Iterable
 
 
 class Parser:
     """
     Parses and validates the map configuration file.
     """
-    def __init__(self, filepath: str) -> None:
+    def __init__(self, filepath: str = "") -> None:
         """
         Initialize the parser with the target file path.
         """
@@ -26,24 +26,37 @@ class Parser:
         """
         try:
             with open(self.filepath, 'r') as f:
-                for l_num, line in enumerate(f, start=1):
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue
-                    if not line.startswith("nb_drones") and not self.nb_drones:
-                        raise ValueError(f"Line {l_num}: "
-                                         f"nb_drones must be defined "
-                                         f"before any zones")
-                    self._parse_line(line, l_num)
-            # self._validate()
-            if self._start_hub_count != 1:
-                raise ValueError("Only one start_hub is allowed")
-            if self._end_hub_count != 1:
-                raise ValueError("Only one end_hub is allowed")
+                self._parse_lines(f)
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")
         except IsADirectoryError:
             raise IsADirectoryError(f"'{self.filepath}' is a directory")
+
+    def parse_from_string(self, content: str) -> None:
+        """
+        Parse map content directly from a string instead of a file.
+        """
+        self._parse_lines(content.splitlines())
+
+    def _parse_lines(self, lines: Iterable[str]) -> None:
+        """
+        Core line-by-line parsing and validation logic.
+        """
+        l_num = 0
+        try:
+            for l_num, line in enumerate(lines, start=1):
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if not line.startswith("nb_drones") and not self.nb_drones:
+                    raise ValueError(f"Line {l_num}: "
+                                     f"nb_drones must be defined "
+                                     f"before any zones")
+                self._parse_line(line, l_num)
+            if self._start_hub_count != 1:
+                raise ValueError("Only one start_hub is allowed")
+            if self._end_hub_count != 1:
+                raise ValueError("Only one end_hub is allowed")
         except ValueError as e:
             raise ValueError(f"Line {l_num}: {e}")
 
