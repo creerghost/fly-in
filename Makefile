@@ -73,6 +73,12 @@ lint-strict: venv
 run-api: venv
 	$(PYTHON_VENV) -m uvicorn api.main:app --reload
 
+docker-up:
+	docker compose up --build
+
+docker-down:
+	docker compose down
+
 help:
 	@echo "Available commands:"
 	@echo "  run: Run the simulation with visualizer"
@@ -80,7 +86,9 @@ help:
 	@echo "  clean: Clean the project"
 	@echo "  lint: Run linters"
 	@echo "  lint-strict: Run strict linters"
-	@echo "  run-api: Run the API server"
+	@echo "  run-api: Run the API server (local)"
+	@echo "  docker-up: Build and run the API in Docker"
+	@echo "  docker-down: Stop the Docker containers"
 	@echo ""
 	@echo "Optional arguments:"
 	@echo "  FILE=path/to/map: Specify a map file"

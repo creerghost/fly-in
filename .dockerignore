@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.git/
+.gitignore
+*.md
+*.pdf
+imgs/
+tmp_map.txt
+Makefile
