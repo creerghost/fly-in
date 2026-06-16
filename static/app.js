@@ -286,56 +286,52 @@ function drawZones() {
     }
 }
 
+function getDroneVisualPos(state) {
+    if (state.transit) {
+        const za = zonePositions[state.zone];
+        const zb = zonePositions[state.transit];
+        if (za && zb) return { x: (za.x + zb.x) / 2, y: (za.y + zb.y) / 2 };
+    }
+    const zp = zonePositions[state.zone];
+    return zp ? { x: zp.x, y: zp.y } : null;
+}
+
 function drawDrones() {
     if (!droneStates.length) return;
 
-    const prevState = droneStates[Math.max(0, currentTurn - (animProgress < 1 ? 0 : 0))];
     const fromState = currentTurn > 0 ? droneStates[currentTurn - 1] : droneStates[0];
     const toState = droneStates[currentTurn];
-
     const droneIds = Object.keys(toState);
-    const droneCount = droneIds.length;
 
     droneIds.forEach((id, idx) => {
         const to = toState[id];
         const from = fromState ? fromState[id] : to;
         const color = DRONE_COLORS[idx % DRONE_COLORS.length];
 
+        const fromPos = getDroneVisualPos(from);
+        const toPos = getDroneVisualPos(to);
+        if (!toPos) return;
+
         let x, y;
 
-        if (to.transit) {
-            // In transit — position between two zones
-            const za = zonePositions[to.zone];
-            const zb = zonePositions[to.transit];
-            if (za && zb) {
-                x = (za.x + zb.x) / 2;
-                y = (za.y + zb.y) / 2;
-            } else {
-                const zp = zonePositions[to.zone] || Object.values(zonePositions)[0];
-                x = zp.x; y = zp.y;
-            }
-        } else if (animProgress < 1 && from && zonePositions[from.zone] && zonePositions[to.zone]) {
-            // Animating between zones
-            const fa = zonePositions[from.transit ? from.zone : from.zone];
-            const ta = zonePositions[to.zone];
+        if (animProgress < 1 && fromPos) {
+            // Smoothly interpolate from previous position to current
             const t = easeInOutCubic(animProgress);
-            x = fa.x + (ta.x - fa.x) * t;
-            y = fa.y + (ta.y - fa.y) * t;
+            x = fromPos.x + (toPos.x - fromPos.x) * t;
+            y = fromPos.y + (toPos.y - fromPos.y) * t;
         } else {
-            const zp = zonePositions[to.zone];
-            if (!zp) return;
-            x = zp.x;
-            y = zp.y;
+            x = toPos.x;
+            y = toPos.y;
         }
 
         // Offset drones so they don't overlap at same zone
-        const sameZone = droneIds.filter((did, di) => {
+        const samePos = droneIds.filter(did => {
             const ds = toState[did];
-            return ds.zone === to.zone && !ds.transit && !to.transit;
+            return ds.zone === to.zone && ds.transit === to.transit;
         });
-        if (sameZone.length > 1 && !to.transit) {
-            const myIdx = sameZone.indexOf(id);
-            const angle = (myIdx / sameZone.length) * Math.PI * 2 - Math.PI / 2;
+        if (samePos.length > 1) {
+            const myIdx = samePos.indexOf(id);
+            const angle = (myIdx / samePos.length) * Math.PI * 2 - Math.PI / 2;
             x += Math.cos(angle) * 14;
             y += Math.sin(angle) * 14;
         }

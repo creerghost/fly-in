@@ -58,6 +58,13 @@ clean:
 	rm -rf tmp_map.txt
 	@echo "done!"
 
+clean-cache:
+	@echo "Cleaning..."
+	find . -name "__pycache__" -exec rm -rf {} + 
+	find . -name "*.pyc" -exec rm -rf {} + 
+	rm -rf tmp_map.txt
+	@echo "done!"
+
 lint: venv
 	@echo "flake8 + mypy checks..."
 	$(PYTHON_VENV) -m flake8 . --exclude=$(VENV)
