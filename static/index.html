@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fly-in | Drone Routing Simulator</title>
+    <meta name="description" content="Interactive drone routing simulation with real-time visualization">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header id="app-header">
+        <div class="logo">
+            <span class="logo-icon">🛸</span>
+            <h1>fly-in</h1>
+            <span class="badge">simulator</span>
+        </div>
+        <div class="header-status" id="status-indicator">
+            <span class="status-dot"></span>
+            <span id="status-text">Ready</span>
+        </div>
+    </header>
+
+    <main id="app-main">
+        <aside class="panel" id="input-panel">
+            <div class="panel-section">
+                <label class="panel-label" for="map-input">Map Configuration</label>
+                <textarea id="map-input" spellcheck="false" placeholder="Paste your map file content here...">nb_drones: 3
+start_hub: start 0 0 [zone=normal max_drones=3]
+hub: alpha 2 1 [zone=priority max_drones=2]
+hub: beta 2 -1 [zone=normal max_drones=2]
+hub: gamma 4 0 [zone=restricted max_drones=1]
+end_hub: goal 6 0 [zone=normal max_drones=3]
+connection: start-alpha
+connection: start-beta
+connection: alpha-gamma
+connection: beta-gamma
+connection: gamma-goal</textarea>
+            </div>
+
+            <button id="run-btn" class="btn-primary">
+                <span class="btn-icon">▶</span>
+                <span class="btn-text">Run Simulation</span>
+            </button>
+
+            <div class="panel-section" id="error-box" style="display:none;">
+                <p class="error-text" id="error-text"></p>
+            </div>
+
+            <div class="panel-section" id="results-section" style="display:none;">
+                <label class="panel-label">Results</label>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-value" id="stat-drones">-</span>
+                        <span class="stat-label">Drones</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="stat-turns">-</span>
+                        <span class="stat-label">Turns</span>
+                    </div>
+                </div>
+                <div class="turn-log" id="turn-log"></div>
+            </div>
+        </aside>
+
+        <section class="canvas-area" id="canvas-area">
+            <canvas id="sim-canvas"></canvas>
+            <div class="playback-bar" id="playback-bar" style="display:none;">
+                <button class="ctrl-btn" id="btn-reset" title="Reset">⏮</button>
+                <button class="ctrl-btn" id="btn-back" title="Step Back">◀</button>
+                <button class="ctrl-btn btn-play" id="btn-play" title="Play/Pause">⏵</button>
+                <button class="ctrl-btn" id="btn-forward" title="Step Forward">▶</button>
+                <button class="ctrl-btn" id="btn-end" title="Jump to End">⏭</button>
+                <div class="turn-display">
+                    <span>Turn</span>
+                    <strong id="turn-current">0</strong>
+                    <span>/</span>
+                    <span id="turn-total">0</span>
+                </div>
+                <input type="range" id="turn-slider" min="0" max="0" value="0" class="turn-slider">
+                <div class="speed-control">
+                    <label for="speed-select">Speed</label>
+                    <select id="speed-select">
+                        <option value="2000">0.5x</option>
+                        <option value="1000" selected>1x</option>
+                        <option value="500">2x</option>
+                        <option value="250">4x</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -18,6 +18,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY src/ src/
 COPY api/ api/
+COPY static/ static/
 COPY maps/ maps/
 COPY fly_in.py .
 
