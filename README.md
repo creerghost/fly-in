@@ -114,7 +114,7 @@ The simulator uses a staged approach:
 
 ### Pathfinding approach: Cooperative Space-Time A*
 
-The core problem is Multi-Agent Pathfinding (MAPF). To solve this efficiently without the exponential overhead of joint-state searching, the project uses a **Cooperative Space-Time A*** algorithm.
+The core problem is Multi-Agent Pathfinding. To solve this efficiently without the exponential overhead of joint-state searching, the project uses a **Cooperative Space-Time A*** algorithm.
 
 Instead of searching in a standard 2D spatial graph, the algorithm searches in a **3D space-time graph** where the dimensions are `(Zone, Turn)`. 
 
@@ -140,7 +140,7 @@ This strategy guarantees collision-free routing, makes conflict checks `O(1)`, a
 
 ### Movement rules and Heuristics
 
-**A* Search Theory:**
+**A-Star Search Theory:**
 A* is a best-first search algorithm that finds the least-cost path by maintaining a priority queue based on the cost function `f(n) = g(n) + h(n)`:
 - `g(n)` represents the exact accumulated cost from the start node to the current node `n`.
 - `h(n)` represents the heuristic function, an estimated cost from node `n` to the goal.

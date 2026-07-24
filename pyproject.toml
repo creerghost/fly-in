@@ -1,0 +1,19 @@
+[project]
+name = "fly-in"
+version = "0.1.0"
+description = "Design of an efficient drone routing system that navigates multiple drones through connected zones while minimizing simulation turns and handling movement constraints."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "vlnikola", email = "vlnikola@student.42prague.com" },
+]
+dependencies = [
+    "pygame>=2.0.0",
+    "pydantic>=2.5.0",
+]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.0.0",
+    "mypy>=1.10.0",
+]
