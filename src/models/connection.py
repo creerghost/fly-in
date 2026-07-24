@@ -11,4 +11,3 @@ class Connection(BaseModel):
     name1: str
     name2: str
     max_link_capacity: int = Field(default=1, gt=0)
-    current_drones: int = Field(default=0)
