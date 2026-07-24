@@ -1,0 +1,143 @@
+geeksforgeeks
+search icon
+
+    Courses
+    Tutorials
+    Interview Prep
+
+    DSA
+    Practice Problems
+    C
+    C++
+    Java
+    Python
+    JavaScript
+    Data Science
+    Machine Learning
+    Courses
+    Linux
+    DevOps
+    SQL
+    Web Development
+
+Object Oriented Programming(OOP) Tutorial
+Last Updated : 23 Jul, 2025
+
+Object Oriented Programming (OOP) is a programming paradigm based on the concept of objects, which can contain data and code: data in the form of fields (often known as attributes or properties) and code in the form of procedures (often known as methods).
+
+Object Oriented Programming (OOP) Tutorial with sections covering key concepts and examples in different popular programming languages: Python, Java, and C++.
+OOP Concepts
+
+Before diving into the languages, let's understand the core concepts of OOP:
+
+    Class: A blueprint or template for creating objects. Defines attributes and behaviors.
+    Object: An instance of a class. Each object has state (attributes) and behavior (methods).
+    Encapsulation: Bundling data (attributes) and methods that operate on data within one unit (class), hiding internal state from outside.
+    Inheritance: Mechanism where a new class derives properties and behaviors from an existing class.
+    Polymorphism: Ability of different classes to be treated as instances of the same class through inheritance. It allows methods to do different things based on the object calling them.
+    Abstraction: Hiding complex implementation details and showing only the necessary features.
+
+OOP in different languages
+
+    OOP in Python
+
+    OOP in Java
+
+    OOP in C++
+
+    OOP in C#
+
+    OOP in JavaScript
+
+Comparison of OOP in Different Languages
+Feature	Python	Java	C++	C#	JavaScript
+Syntax	Simple, dynamic typing	Strict, static typing	Complex, static typing	Clean, static typing	Flexible, dynamic typing
+Memory Management	Automatic (Garbage collection)	Automatic (Garbage collection)	Manual or automatic (RAII, smart pointers)	Automatic (Garbage collection)	Automatic (Garbage collection)
+Encapsulation	Convention via underscore/private	Explicit private/public/protected	Explicit private/public/protected	Explicit private/public/protected	Via closures and private fields (#)
+Polymorphism	Supported via method overriding	Supported via overriding & interfaces	Supported via virtual functions	Supported via virtual methods and interfaces	Supported via prototype chaining and method overriding
+Inheritance	Single and multiple inheritance	Single inheritance, interfaces	Multiple inheritance supported	Single inheritance, multiple interfaces	Prototype-based inheritance
+Abstraction	Supported via abstract base classes and interfaces (via ABC module)	Supported via abstract classes and interfaces	Supported via abstract classes and pure virtual functions	Supported via abstract classes and interfaces	Achieved through prototypes and ES6 classes
+Access Modifiers	No strict enforcement; convention only (_ or __)	Strict enforcement (private, protected, public)	Strict enforcement (private, protected, public)	Strict enforcement (private, protected, internal, public)	Limited; public by default, private via # or closure
+Multiple Inheritance	Supported	Not supported for classes; allowed via interfaces	Fully supported	Not supported for classes; allowed via interfaces	Not supported; prototypal inheritance used instead
+Method Overloading	Not natively supported; can be mimicked	Supported	Supported	Supported	Not supported natively
+Comment
+https://media.geeksforgeeks.org/auth/avatar.png
+GeeksforGeeks
+Explore
+
+    DSA Tutorial
+    10 min read
+    System Design Tutorial
+    4 min read
+    Aptitude Questions and Answers
+    3 min read
+    Web Development Technologies
+    5 min read
+    AI, ML and Data Science Tutorial
+    3 min read
+    DevOps Tutorial
+    3 min read
+
+ADVERTISING
+GeeksforGeeks
+location
+Corporate & Communications Address:
+A-143, 6th Floor, Sovereign Corporate Tower, Sector- 136, Noida, Uttar Pradesh (201305)
+location
+Registered Address:
+K 061, Tower K, Gulshan Vivante Apartment, Sector 137, Noida, Gautam Buddh Nagar, Uttar Pradesh, 201305
+GFG App on Play Store
+GFG App on App Store
+
+    Company
+    About Us
+    Legal
+    Privacy Policy
+    Contact Us
+    Advertise with us
+    GFG Corporate Solution
+    Campus Training Program
+
+    Explore
+    POTD
+    Job-A-Thon
+    Blogs
+    Nation Skill Up
+
+    Tutorials
+    Programming Languages
+    DSA
+    Web Technology
+    AI, ML & Data Science
+    DevOps
+    CS Core Subjects
+    Interview Preparation
+    Software and Tools
+
+    Courses
+    ML and Data Science
+    DSA and Placements
+    Web Development
+    Programming Languages
+    DevOps & Cloud
+    GATE
+    Trending Technologies
+
+    Videos
+    DSA
+    Python
+    Java
+    C++
+    Web Development
+    Data Science
+    CS Subjects
+
+    Preparation Corner
+    Interview Corner
+    Aptitude
+    Puzzles
+    GfG 160
+    System Design
+
+@GeeksforGeeks, Sanchhaya Education Private Limited, All rights reserved
+

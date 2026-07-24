@@ -2,38 +2,13 @@ import os
 import sys
 import math
 import pygame
-from enum import Enum
-from src.network import Network
-from src.drone import Drone
+from ..models import Network, Drone
+from ..interfaces import AbstractRenderer
 from typing import List, Tuple, Optional, Dict
+from .colors import Colors
 
 
-class Colors(Enum):
-    """
-    Stores colors used for rendering.
-    """
-    GREEN = (34, 139, 34)
-    BLUE = (65, 105, 225)
-    RED = (220, 20, 60)
-    YELLOW = (255, 215, 0)
-    ORANGE = (255, 140, 0)
-    CYAN = (0, 255, 255)
-    PURPLE = (128, 0, 128)
-    BROWN = (139, 69, 19)
-    LIME = (50, 205, 50)
-    MAGENTA = (255, 0, 255)
-    GOLD = (255, 215, 0)
-    BLACK = (40, 40, 40)
-    DARKRED = (139, 0, 0)
-    MAROON = (128, 0, 0)
-    CRIMSON = (220, 20, 60)
-    VIOLET = (238, 130, 238)
-    WHITE = (255, 255, 255)
-    GRAY = (128, 128, 128)
-    RAINBOW = (255, 105, 180)
-
-
-class Renderer:
+class Renderer(AbstractRenderer):
     """
     Handles the graphical display of the simulation using Pygame.
     Features an interactive time-scrubbing loop and a Heads-Up Display (HUD)
@@ -332,12 +307,12 @@ class Renderer:
                 (px - cap.get_width() // 2,
                  py - cap.get_height() // 2 + 14))
 
-            if (self.network.parser.start_hub and
-                    zone.name == self.network.parser.start_hub["name"]):
+            if (self.network.start_hub and
+                    zone.name == self.network.start_hub.name):
                 lbl: Optional[pygame.Surface] = self.font.render(
                     "Start", True, Colors.BLACK.value)
-            elif (self.network.parser.end_hub and
-                    zone.name == self.network.parser.end_hub["name"]):
+            elif (self.network.end_hub and
+                    zone.name == self.network.end_hub.name):
                 lbl = self.font.render("End", True, Colors.BLACK.value)
             elif zone.zone_type == "restricted":
                 lbl = self.font.render("R", True, Colors.BLACK.value)

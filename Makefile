@@ -45,9 +45,9 @@ gen_map:
 run:
 ifeq ($(strip $(FILE)),)
 	@printf "$(YELLOW)FILE argument was not provided. Running default map...\n$(RESET)"
-	@$(MAKE) gen_map
+	@$(MAKE) gen_map; status=$$?; $(MAKE) clean-cache; exit $$status
 else
-	$(PYTHON) -m src $(FILE) $(ARGS)
+	$(PYTHON) -m src $(FILE) $(ARGS); status=$$?; $(MAKE) clean-cache; exit $$status
 endif
 
 debug:
@@ -59,8 +59,16 @@ else
 endif
 
 clean:
-	@printf "$(YELLOW)Cleaning caches and temporary files...\n$(RESET)"
+	@printf "$(YELLOW)Cleaning caches, temporary files and venv...\n$(RESET)"
 	rm -rf .venv venv
+	rm -rf .mypy_cache .pytest_cache
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type f -name "*.pyc" -exec rm -f {} +
+	rm -f tmp_map.txt
+	@printf "$(GREEN)Done!$(RESET)\n"
+
+clean-cache:
+	@printf "$(YELLOW)Cleaning caches and temporary files...\n$(RESET)"
 	rm -rf .mypy_cache .pytest_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -exec rm -f {} +
