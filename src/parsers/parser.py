@@ -21,7 +21,6 @@ class Parser:
         self._connections: List[Connection] = []
         self._start_hub_count = 0
         self._end_hub_count = 0
-        self.zone_names: set[str] = set()
 
     def parse(self) -> Network:
         """
@@ -76,17 +75,14 @@ class Parser:
             self._start_hub_count += 1
             self._start_hub = self._parse_zone_line(
                 line.replace("start_hub:", "").strip())
-            self.zone_names.add(self._start_hub.name)
         elif line.startswith("end_hub:"):
             self._end_hub_count += 1
             self._end_hub = self._parse_zone_line(
                 line.replace("end_hub:", "").strip())
-            self.zone_names.add(self._end_hub.name)
         elif line.startswith("hub:"):
             hub = self._parse_zone_line(
                 line.replace("hub:", "").strip())
             self._hubs.append(hub)
-            self.zone_names.add(hub.name)
         elif line.startswith("connection:"):
             self._connections.append(self._parse_connection_line(
                 line.replace("connection:", "").strip()))
@@ -153,10 +149,6 @@ class Parser:
 
         if not z1 or not z2:
             raise ValueError("Connection zone names cannot be empty")
-
-        if z1 not in self.zone_names or z2 not in self.zone_names:
-            raise ValueError(f"Connection {z1}-{z2} links to "
-                             f"undefined zone(s)")
 
         conn_data: Dict[str, Any] = {
             "name1": z1,
