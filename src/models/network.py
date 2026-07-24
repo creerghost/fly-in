@@ -84,3 +84,17 @@ class Network(BaseModel):
                 (self.zones[con.name2], con))
             self.neighboring_zones[con.name2].append(
                 (self.zones[con.name1], con))
+
+    def __len__(self) -> int:
+        return len(self.zones)
+
+    def __contains__(self, zone_name: str) -> bool:
+        return zone_name in self.zones
+
+    def __getitem__(self, zone_name: str) -> Zone:
+        return self.zones[zone_name]
+
+    def __str__(self) -> str:
+        return (f"Network({len(self.zones)} zones, "
+                f"{len(self.connections)} connections, "
+                f"{self.nb_drones} drones)")

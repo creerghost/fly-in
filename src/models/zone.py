@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, model_validator, Field
-from typing import Self
+from typing import Self, Optional
 from enum import StrEnum
 
 
@@ -11,6 +11,16 @@ class ZoneType(StrEnum):
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
+
+    @property
+    def display_label(self) -> Optional[str]:
+        if self == ZoneType.RESTRICTED:
+            return "R"
+        elif self == ZoneType.BLOCKED:
+            return "B"
+        elif self == ZoneType.PRIORITY:
+            return "P"
+        return None
 
 
 class Zone(BaseModel):

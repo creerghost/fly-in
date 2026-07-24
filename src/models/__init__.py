@@ -1,7 +1,8 @@
-from .zone import Zone
-from .drone import Drone
+from .zone import Zone, ZoneType
+from .drone import Drone, DroneStatus
 from .network import Network
-from .connection import Connection
+from .temporal_state import TemporalState
 
 
-__all__ = ["Network", "Zone", "Connection", "Drone"]
+__all__ = ["Network", "Zone", "ZoneType", "Drone",
+           "DroneStatus", "TemporalState"]

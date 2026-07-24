@@ -3,7 +3,7 @@ from typing import List
 from src.models import Drone
 
 
-class AbstractRenderer(ABC):
+class Renderer(ABC):
     """
     Interface for the simulation renderer.
     """

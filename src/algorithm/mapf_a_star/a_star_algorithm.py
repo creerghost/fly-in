@@ -1,21 +1,7 @@
 from typing import List, Optional, Tuple, Set
 from heapq import heappop, heappush
-from ...models import Network
+from ...models import Network, TemporalState
 from ...interfaces import Pathfinder
-from dataclasses import dataclass, field
-
-
-@dataclass(order=True)
-class TemporalState():
-    """
-    Storing data for each TemporalState object.
-    """
-    f_cost: float
-    g_cost: float = field(compare=False)
-    h_cost: float = field(compare=False)
-    turn: int = field(compare=False)
-    zone_name: str = field(compare=False)
-    parent: Optional['TemporalState'] = field(default=None, compare=False)
 
 
 class AStarAlgorithm(Pathfinder):
@@ -34,10 +20,10 @@ class AStarAlgorithm(Pathfinder):
         Calculate a scaled Manhattan distance heuristic to maintain
         admissibility.
         """
-        return float(abs(self.network.zones[current_zone].x -
-                     self.network.zones[target_zone].x) +
-                     abs(self.network.zones[current_zone].y -
-                     self.network.zones[target_zone].y)) * 0.25
+        return float(abs(self.network[current_zone].x -
+                     self.network[target_zone].x) +
+                     abs(self.network[current_zone].y -
+                     self.network[target_zone].y)) * 0.25
 
     def generate_valid_neighbors(self,
                                  current_state: TemporalState,
@@ -51,18 +37,11 @@ class AStarAlgorithm(Pathfinder):
 
         for neighbor, connection in self.network.neighboring_zones[
                 current_state.zone_name]:
-            if neighbor.zone_type == "blocked":
+            if not neighbor.is_traversable:
                 continue
 
-            step_cost = 1.0
-            if neighbor.zone_type == "normal":
-                next_turn = current_state.turn + 1
-            elif neighbor.zone_type == "priority":
-                next_turn = current_state.turn + 1
-                step_cost = 0.8
-            elif neighbor.zone_type == "restricted":
-                next_turn = current_state.turn + 2
-                step_cost = 2.0
+            next_turn = current_state.turn + neighbor.transit_time
+            step_cost = neighbor.movement_cost
 
             new_g_cost = current_state.g_cost + step_cost
             new_h_cost = self._calculate_h(neighbor.name, target_zone)

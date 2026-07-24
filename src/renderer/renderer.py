@@ -3,12 +3,13 @@ import sys
 import math
 import pygame
 from ..models import Network, Drone
-from ..interfaces import AbstractRenderer
+from ..interfaces import Renderer
 from typing import List, Tuple, Optional, Dict
 from .colors import Colors
+from .hud_stats import HudStats
 
 
-class Renderer(AbstractRenderer):
+class PygameRenderer(Renderer):
     """
     Handles the graphical display of the simulation using Pygame.
     Features an interactive time-scrubbing loop and a Heads-Up Display (HUD)
@@ -125,34 +126,11 @@ class Renderer(AbstractRenderer):
         Calculates HUD metrics and continuously renders drones, maps,
         and analytics while processing user inputs.
         """
-        max_turn = max(d.path[-1][1] for d in drones)
-        total_cost: float = 0.0
-        total_cost_stats: int = 0
-        for d in drones:
-            for i in range(0, len(d.path) - 1):
-                prev_node = d.path[i][0]
-                next_node = d.path[i + 1][0]
-                if prev_node == next_node:
-                    total_cost += 1
-                    total_cost_stats += 1
-                else:
-                    if self.network.zones[next_node].zone_type == "restricted":
-                        total_cost += 2
-                        total_cost_stats += 2
-                    elif self.network.zones[next_node].zone_type == "normal":
-                        total_cost += 1
-                        total_cost_stats += 1
-                    elif self.network.zones[next_node].zone_type == "priority":
-                        total_cost += 0.8
-                        total_cost_stats += 1
-
-        self.total_cost = total_cost_stats
-        self.total_drones = len(drones)
-        self.avg_turns = (sum(d.path[-1][1] for d in drones) /
-                          self.total_drones if self.total_drones else 0.0)
+        self.hud_stats = HudStats.from_drones(drones, self.network)
 
         self.is_paused = False
 
+        max_turn = max((d.path[-1][1] for d in drones if d.path), default=0)
         while True:
             dt = self.clock.tick(60) / 1000.0
 
@@ -207,19 +185,7 @@ class Renderer(AbstractRenderer):
         Determine the string representation of a drone's location at a specific
         integer turn. Formats mid-transit locations as `zone1-zone2`.
         """
-        if t >= drone.path[-1][1]:
-            return drone.path[-1][0]
-        for i in range(len(drone.path) - 1):
-            curr_zone, curr_turn = drone.path[i]
-            next_zone, next_turn = drone.path[i + 1]
-            if t == curr_turn:
-                return curr_zone
-            elif curr_turn < t < next_turn:
-                if curr_zone == next_zone:
-                    return curr_zone
-                else:
-                    return f"{curr_zone}-{next_zone}"
-        return drone.path[-1][0]
+        return drone.location_at_turn(t)
 
     def _print_turn_output(self, drones: List[Drone]) -> None:
         """
@@ -261,8 +227,8 @@ class Renderer(AbstractRenderer):
         overlapping bidirectional connections.
         """
         for con in self.network.connections:
-            z1 = self.network.zones.get(con.name1)
-            z2 = self.network.zones.get(con.name2)
+            z1 = self.network[con.name1]
+            z2 = self.network[con.name2]
             if z1 and z2:
                 p1 = self._get_pixel_coords(z1.x, z1.y)
                 p2 = self._get_pixel_coords(z2.x, z2.y)
@@ -314,12 +280,9 @@ class Renderer(AbstractRenderer):
             elif (self.network.end_hub and
                     zone.name == self.network.end_hub.name):
                 lbl = self.font.render("End", True, Colors.BLACK.value)
-            elif zone.zone_type == "restricted":
-                lbl = self.font.render("R", True, Colors.BLACK.value)
-            elif zone.zone_type == "blocked":
-                lbl = self.font.render("B", True, Colors.BLACK.value)
-            elif zone.zone_type == "priority":
-                lbl = self.font.render("P", True, Colors.BLACK.value)
+            elif zone.zone_type.display_label:
+                lbl = self.font.render(
+                    zone.zone_type.display_label, True, Colors.BLACK.value)
             else:
                 lbl = None
 
@@ -336,28 +299,29 @@ class Renderer(AbstractRenderer):
         """
         drone_groups: Dict[Tuple[int, int], List[Drone]] = {}
         drone_transits: Dict[Tuple[int, int], bool] = {}
-        self.active_drones = 0
+        self.hud_stats.active_drones = 0
 
         for drone in drones:
             t_current = self.current_time
             if t_current >= drone.path[-1][1]:
-                zone = self.network.zones[drone.path[-1][0]]
+                zone = self.network[drone.path[-1][0]]
                 px, py = self._get_pixel_coords(zone.x, zone.y)
                 transit = False
             elif t_current <= drone.path[0][1]:
-                zone = self.network.zones[drone.path[0][0]]
+                zone = self.network[drone.path[0][0]]
                 px, py = self._get_pixel_coords(zone.x, zone.y)
                 transit = False
             else:
-                for i in range(len(drone.path) - 1):
-                    curr_zone_name, curr_turn = drone.path[i]
-                    next_zone_name, next_turn = drone.path[i + 1]
+                for curr_step, next_step in zip(
+                        drone.path[:-1], drone.path[1:]):
+                    curr_zone_name, curr_turn = curr_step
+                    next_zone_name, next_turn = next_step
                     if curr_turn <= t_current < next_turn:
                         t_frac = (t_current - curr_turn) / (
                             next_turn - curr_turn)
                         t_smooth = t_frac * t_frac * (3.0 - 2.0 * t_frac)
-                        z1 = self.network.zones[curr_zone_name]
-                        z2 = self.network.zones[next_zone_name]
+                        z1 = self.network[curr_zone_name]
+                        z2 = self.network[next_zone_name]
                         start_x, start_y = self._get_pixel_coords(
                             z1.x, z1.y)
                         end_x, end_y = self._get_pixel_coords(z2.x, z2.y)
@@ -372,7 +336,7 @@ class Renderer(AbstractRenderer):
                         break
 
             if transit:
-                self.active_drones += 1
+                self.hud_stats.active_drones += 1
 
             coord = (int(px), int(py))
             if coord not in drone_groups:
@@ -397,10 +361,10 @@ class Renderer(AbstractRenderer):
                          (self.width, self.height - self.panel_height), 2)
 
         metrics = [
-            ("Total Drones:", str(self.total_drones)),
-            ("Active Drones:", str(getattr(self, 'active_drones', 0))),
-            ("Avg Turns per drone:", f"{self.avg_turns:.1f}"),
-            ("Total Cost:", f"{self.total_cost}")
+            ("Total Drones:", str(self.hud_stats.total_drones)),
+            ("Active Drones:", str(self.hud_stats.active_drones)),
+            ("Avg Turns per drone:", f"{self.hud_stats.avg_turns:.1f}"),
+            ("Total Cost:", f"{self.hud_stats.total_cost}")
         ]
 
         start_x = 40

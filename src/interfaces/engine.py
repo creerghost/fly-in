@@ -1,14 +1,17 @@
 from abc import ABC, abstractmethod
+from typing import List
+from src.models import Drone
 from .runnable import Runnable
 
 
-class AbstractEngine(Runnable, ABC):
+class Engine(Runnable, ABC):
     """
     Interface for the simulation engine.
     """
+    @property
     @abstractmethod
-    def _plan_routes(self) -> None:
+    def drones(self) -> List[Drone]:
         """
-        Plans the routes for all drones using the injected pathfinder.
+        Returns the list of drones managed by the engine.
         """
         pass

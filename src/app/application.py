@@ -1,46 +1,42 @@
 from ..parsers import Parser, ArgParser
-from ..engine import Engine
-from ..models import Network
+from ..engine import SimulationEngine
 from ..algorithm import CooperativeAStar, CollisionManager
+from ..interfaces import Pathfinder, Engine, Manager
 import sys
 
 
 class Application():
     @staticmethod
     def run() -> None:
+        visual = False
         try:
             args = ArgParser.parse()
+            visual = args.visual
             parser = Parser(args.filename)
-            parser.parse()
+            network = parser.parse()
 
-            network = Network(
-                nb_drones=parser.nb_drones,
-                start_hub=parser.start_hub,  # type: ignore
-                end_hub=parser.end_hub,      # type: ignore
-                hubs=parser.hubs,            # type: ignore
-                connections=parser.connections  # type: ignore
-            )
+            collision_manager: Manager = CollisionManager()
+            pathfinder: Pathfinder = CooperativeAStar(
+                network, collision_manager)
 
-            collision_manager = CollisionManager()
-            pathfinder = CooperativeAStar(network, collision_manager)
-
-            engine = Engine(network, pathfinder)
+            engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
 
-            if args.visual:
-                from ..renderer import Renderer
-                renderer = Renderer(network, args.speed)
+            if visual:
+                from ..renderer import PygameRenderer
+                from ..interfaces import Renderer
+                renderer: Renderer = PygameRenderer(network, args.speed)
                 renderer.run(engine.drones)
 
         except Exception as e:
             print(f"Error: {e}")
-            if args.visual:
+            if visual:
                 import pygame
                 pygame.quit()
             sys.exit(1)
         except KeyboardInterrupt:
             print("\nBye!")
-            if args.visual:
+            if visual:
                 import pygame
                 pygame.quit()
             sys.exit(0)

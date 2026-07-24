@@ -1,4 +1,7 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
+from ..models import Network
+from ..models.zone import Zone
+from ..models.connection import Connection
 
 
 class Parser:
@@ -12,17 +15,18 @@ class Parser:
         self.filepath = filepath
 
         self.nb_drones: int = 0
-        self.start_hub: Dict[str, Any] | None = None
-        self.end_hub: Dict[str, Any] | None = None
-        self.hubs: List[Dict[str, Any]] = []
-        self.connections: List[Dict[str, Any]] = []
+        self._start_hub: Zone | None = None
+        self._end_hub: Zone | None = None
+        self._hubs: List[Zone] = []
+        self._connections: List[Connection] = []
         self._start_hub_count = 0
         self._end_hub_count = 0
         self.zone_names: set[str] = set()
 
-    def parse(self) -> None:
+    def parse(self) -> Network:
         """
         Read and parse the file line by line, then validate constraints.
+        Returns a fully constructed Network domain object.
         """
         try:
             with open(self.filepath, 'r') as f:
@@ -47,6 +51,17 @@ class Parser:
         except ValueError as e:
             raise ValueError(f"Line {l_num}: {e}")
 
+        if self._start_hub is None or self._end_hub is None:
+            raise ValueError("start_hub and end_hub must be defined")
+
+        return Network(
+            nb_drones=self.nb_drones,
+            start_hub=self._start_hub,
+            end_hub=self._end_hub,
+            hubs=self._hubs if self._hubs else None,
+            connections=self._connections
+        )
+
     def _parse_line(self, line: str, line_num: int) -> None:
         """
         Parse an individual line from the configuration file.
@@ -59,30 +74,28 @@ class Parser:
             self.nb_drones = int(drones[1].strip())
         elif line.startswith("start_hub:"):
             self._start_hub_count += 1
-            self.start_hub = self._parse_zone_line(
+            self._start_hub = self._parse_zone_line(
                 line.replace("start_hub:", "").strip())
-            self.zone_names.add(self.start_hub["name"])
+            self.zone_names.add(self._start_hub.name)
         elif line.startswith("end_hub:"):
             self._end_hub_count += 1
-            self.end_hub = self._parse_zone_line(
+            self._end_hub = self._parse_zone_line(
                 line.replace("end_hub:", "").strip())
-            self.zone_names.add(self.end_hub["name"])
+            self.zone_names.add(self._end_hub.name)
         elif line.startswith("hub:"):
-            hub_data = self._parse_zone_line(
+            hub = self._parse_zone_line(
                 line.replace("hub:", "").strip())
-            self.hubs.append(hub_data)
-            self.zone_names.add(hub_data["name"])
+            self._hubs.append(hub)
+            self.zone_names.add(hub.name)
         elif line.startswith("connection:"):
-            self.connections.append(self._parse_connection_line(
+            self._connections.append(self._parse_connection_line(
                 line.replace("connection:", "").strip()))
         else:
             raise ValueError(f"Line {line_num}: "
                              f"Unknown syntax on line '{line}'")
 
-    def _parse_zone_line(self, line: str) -> Dict[str, Any]:
-        """
-        Extract node data and metadata attributes from a zone string.
-        """
+    @staticmethod
+    def _parse_metadata(line: str) -> Tuple[str, Dict[str, str]]:
         if "[" in line or "]" in line:
             if (line.count("[") != 1 or
                     line.count("]") != 1 or
@@ -90,14 +103,8 @@ class Parser:
                 raise ValueError("Invalid metadata block syntax")
 
         parts = line.split("[")
-        base_info = parts[0].strip().split()
-        if len(base_info) != 3:
-            raise ValueError("Invalid syntax for zone line")
-        data: Dict[str, Any] = {
-            "name": base_info[0],
-            "x": base_info[1],
-            "y": base_info[2],
-        }
+        base_info = parts[0].strip()
+        data: Dict[str, str] = {}
 
         if len(parts) > 1:
             meta_str = parts[1].replace("]", "").strip()
@@ -110,20 +117,33 @@ class Parser:
                                      f"'{item}'")
                 k, v = item.split("=")
                 data[k.strip()] = v.strip()
-        return data
+        return base_info, data
 
-    def _parse_connection_line(self, line: str) -> Dict[str, Any]:
+    def _parse_zone_line(self, line: str) -> Zone:
+        """
+        Extract node data and metadata attributes from a zone string.
+        """
+        base_info_str, meta_data = self._parse_metadata(line)
+        base_info = base_info_str.split()
+
+        if len(base_info) != 3:
+            raise ValueError("Invalid syntax for zone line")
+
+        zone_data: Dict[str, Any] = {
+            "name": base_info[0],
+            "x": base_info[1],
+            "y": base_info[2],
+        }
+        zone_data.update(meta_data)
+
+        return Zone(**zone_data)
+
+    def _parse_connection_line(self, line: str) -> Connection:
         """
         Extract edge data and link capacity metadata from a connection string.
         """
-        if "[" in line or "]" in line:
-            if (line.count("[") != 1 or
-                    line.count("]") != 1 or
-                    not line.endswith("]")):
-                raise ValueError("Invalid metadata block syntax")
-
-        parts = line.split("[")
-        names = parts[0].strip().split("-")
+        base_info_str, meta_data = self._parse_metadata(line)
+        names = base_info_str.split("-")
 
         if len(names) != 2:
             raise ValueError(f"Invalid connection syntax: {line}")
@@ -138,20 +158,10 @@ class Parser:
             raise ValueError(f"Connection {z1}-{z2} links to "
                              f"undefined zone(s)")
 
-        data: Dict[str, Any] = {
+        conn_data: Dict[str, Any] = {
             "name1": z1,
             "name2": z2,
         }
+        conn_data.update(meta_data)
 
-        if len(parts) > 1:
-            meta_str = parts[1].replace("]", "").strip()
-            if not meta_str:
-                raise ValueError("Empty metadata block inside brackets")
-            meta_items = meta_str.split()
-            for item in meta_items:
-                if "=" not in item or item.count("=") != 1:
-                    raise ValueError(f"Invalid metadata item syntax: "
-                                     f"'{item}'")
-                k, v = item.split("=")
-                data[k.strip()] = v.strip()
-        return data
+        return Connection(**conn_data)

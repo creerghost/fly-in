@@ -1,4 +1,3 @@
-from .colors import Colors
-from .renderer import Renderer
+from .renderer import PygameRenderer
 
-__all__ = ["Colors", "Renderer"]
+__all__ = ["PygameRenderer"]

@@ -1,7 +1,7 @@
 from typing import List, Tuple
-from ...models import Network, Zone
-from .collision_manager import CollisionManager
-from .a_star_algorithm import AStarAlgorithm, TemporalState
+from ...models import Network, Zone, TemporalState
+from ...interfaces import Manager
+from .a_star_algorithm import AStarAlgorithm
 
 
 class CooperativeAStar(AStarAlgorithm):
@@ -10,7 +10,7 @@ class CooperativeAStar(AStarAlgorithm):
     reservation constraints.
     """
     def __init__(self, network: Network,
-                 reservations: CollisionManager) -> None:
+                 reservations: Manager) -> None:
         """
         Initialize the pathfinder with the network topology and global
         reservation table.
@@ -40,7 +40,7 @@ class CooperativeAStar(AStarAlgorithm):
         """
         next_turn = current_state.turn + 1
         neighbors: List[TemporalState] = []
-        current_zone: Zone = self.network.zones[current_state.zone_name]
+        current_zone: Zone = self.network[current_state.zone_name]
 
         if self.reservations.is_zone_available(current_state.zone_name,
                                                next_turn,
@@ -57,18 +57,11 @@ class CooperativeAStar(AStarAlgorithm):
 
         for neighbor, connection in self.network.neighboring_zones[
                 current_state.zone_name]:
-            if neighbor.zone_type == "blocked":
+            if not neighbor.is_traversable:
                 continue
 
-            step_cost = 1.0
-            if neighbor.zone_type == "normal":
-                next_turn = current_state.turn + 1
-            elif neighbor.zone_type == "priority":
-                next_turn = current_state.turn + 1
-                step_cost = 0.8
-            elif neighbor.zone_type == "restricted":
-                next_turn = current_state.turn + 2
-                step_cost = 2.0
+            next_turn = current_state.turn + neighbor.transit_time
+            step_cost = neighbor.movement_cost
 
             link_available = True
             for t in range(current_state.turn + 1, next_turn + 1):
