@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from ...models import Network, Zone, TemporalState
 from ...interfaces import Manager
-from .a_star_algorithm import AStarAlgorithm
+from .a_star import AStarAlgorithm
 
 
 class CooperativeAStar(AStarAlgorithm):

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import List, Optional, Tuple, Set
 from heapq import heappop, heappush
 from ...models import Network, TemporalState
@@ -6,8 +7,7 @@ from ...interfaces import Pathfinder
 
 class AStarAlgorithm(Pathfinder):
     """
-    Implements standard A* pathfinding algorithm without
-    collision or capacity constraints.
+    Abstract base class for A* based pathfinding algorithms.
     """
     def __init__(self, network: Network) -> None:
         """
@@ -25,46 +25,26 @@ class AStarAlgorithm(Pathfinder):
                      abs(self.network[current_zone].y -
                      self.network[target_zone].y)) * 0.25
 
+    @abstractmethod
     def generate_valid_neighbors(self,
                                  current_state: TemporalState,
                                  target_zone: str
                                  ) -> List[TemporalState]:
         """
-        Generate all valid neighboring TemporalStates without checking
-        capacities.
+        Generate all valid neighboring TemporalStates.
+        Must be implemented by subclasses.
         """
-        neighbors: List[TemporalState] = []
+        pass
 
-        for neighbor, connection in self.network.neighboring_zones[
-                current_state.zone_name]:
-            if not neighbor.is_traversable:
-                continue
-
-            next_turn = current_state.turn + neighbor.transit_time
-            step_cost = neighbor.movement_cost
-
-            new_g_cost = current_state.g_cost + step_cost
-            new_h_cost = self._calculate_h(neighbor.name, target_zone)
-
-            new_state = TemporalState(
-                f_cost=new_g_cost + new_h_cost,
-                g_cost=new_g_cost,
-                h_cost=new_h_cost,
-                turn=next_turn,
-                zone_name=neighbor.name,
-                parent=current_state
-            )
-            neighbors.append(new_state)
-
-        return neighbors
-
+    @abstractmethod
     def get_state_key(self, state: TemporalState) -> Tuple[str, int] | str:
         """
-        Hook for subclasses to define what makes a state unique in the
-        visited set. Standard A* just uses the zone name.
+        Define what makes a state unique in the visited set.
+        Must be implemented by subclasses.
         """
-        return state.zone_name
+        pass
 
+    @abstractmethod
     def on_path_found(self, path: List[Tuple[str, int]]) -> None:
         """
         Hook for subclasses to act when a path is successfully found.
@@ -87,12 +67,12 @@ class AStarAlgorithm(Pathfinder):
             zone_name=start_zone
             )
 
-        open_set: List[TemporalState] = []
+        heap: List[TemporalState] = []
         visited: Set[Tuple[str, int] | str] = set()
-        heappush(open_set, start_state)
+        heappush(heap, start_state)
 
-        while open_set:
-            current_state = heappop(open_set)
+        while heap:
+            current_state = heappop(heap)
 
             if current_state.zone_name == end_zone:
                 path = []
@@ -114,6 +94,6 @@ class AStarAlgorithm(Pathfinder):
                                                           end_zone):
                 neighbor_key = self.get_state_key(neighbor)
                 if neighbor_key not in visited:
-                    heappush(open_set, neighbor)
+                    heappush(heap, neighbor)
 
         return None

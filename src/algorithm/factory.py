@@ -1,7 +1,7 @@
 from ..models import Network
 from ..interfaces import Pathfinder
-from .mapf_a_star.cooperative_a_star import CooperativeAStar
-from .mapf_a_star.collision_manager import CollisionManager
+from .coop_a_star.algorithm import CooperativeAStar
+from .coop_a_star.manager import CollisionManager
 
 
 class PathfinderFactory:
