@@ -1,3 +1,3 @@
-from .web_renderer import WebRenderer
+from .renderer import WebRenderer
 
 __all__ = ["WebRenderer"]
