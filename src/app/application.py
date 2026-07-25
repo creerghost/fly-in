@@ -29,7 +29,7 @@ class Application():
             engine.run()
 
             renderer: Renderer = RendererFactory.create(
-                visual, network, args.speed
+                visual, args.renderer, network, args.speed
             )
 
             renderer.run(engine.drones)

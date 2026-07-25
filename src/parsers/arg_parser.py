@@ -28,4 +28,9 @@ class ArgParser():
             "--algo", type=str, choices=["coop"], default="coop",
             help="Select the pathfinding algorithm to use"
             )
+        argparser.add_argument(
+            "--renderer", type=str, choices=["pygame", "web"],
+            default="pygame",
+            help="Select the renderer algorithm to use"
+            )
         return argparser.parse_args()
