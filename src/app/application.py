@@ -7,7 +7,7 @@ import sys
 
 class Application():
     @staticmethod
-    def run():
+    def run() -> None:
         visual = False
         try:
             args = ArgParser.parse()
