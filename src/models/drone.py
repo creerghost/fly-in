@@ -1,9 +1,9 @@
 from typing import List, Tuple
-from enum import StrEnum
+from enum import Enum
 from dataclasses import dataclass, field
 
 
-class DroneStatus(StrEnum):
+class DroneStatus(str, Enum):
     WAITING = "waiting"
     IN_FLIGHT = "in_flight"
     FINISHED = "finished"

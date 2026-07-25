@@ -1,9 +1,10 @@
 from pydantic import BaseModel, ConfigDict, model_validator, Field
-from typing import Self, Optional
-from enum import StrEnum
+from typing import Optional
+from typing_extensions import Self
+from enum import Enum
 
 
-class ZoneType(StrEnum):
+class ZoneType(str, Enum):
     """
     Enumeration of valid zone types for the drone network.
     """

@@ -78,13 +78,13 @@ clean-cache:
 lint:
 	@printf "$(YELLOW)Running flake8 and mypy checks...\n$(RESET)"
 	$(PYTHON) -m flake8 . --exclude=".venv/,scripts/"
-	$(PYTHON) -m mypy . --exclude=".venv/,scripts/" --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	$(PYTHON) -m mypy . --exclude="(\.venv|scripts)" --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 	@printf "$(GREEN)Done!$(RESET)\n"
 
 lint-strict:
 	@printf "$(YELLOW)Running flake8 and STRICT mypy checks...\n$(RESET)"
 	$(PYTHON) -m flake8 . --exclude=".venv/,scripts/"
-	$(PYTHON) -m mypy . --exclude=".venv/,scripts/" --strict
+	$(PYTHON) -m mypy . --exclude="(\.venv|scripts)" --strict
 	@printf "$(GREEN)Done!$(RESET)\n"
 
 help:

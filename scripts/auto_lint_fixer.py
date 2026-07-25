@@ -3,9 +3,10 @@ import subprocess
 import sys
 import os
 import re
+from typing import Tuple, List
 from google import genai
 
-def run_linter():
+def run_linter() -> Tuple[int, str, str]:
     print("Running make lint...")
     result = subprocess.run(
         ["make", "lint"],
@@ -14,7 +15,7 @@ def run_linter():
     )
     return result.returncode, result.stdout, result.stderr
 
-def extract_files_with_errors(lint_output):
+def extract_files_with_errors(lint_output: str) -> List[str]:
     # Match patterns like: path/to/file.py:line:col or path/to/file.py:line: error
     files = set()
     for line in lint_output.splitlines():
@@ -23,7 +24,7 @@ def extract_files_with_errors(lint_output):
             files.add(match.group(1))
     return list(files)
 
-def fix_file_with_gemini(client, file_path, lint_output):
+def fix_file_with_gemini(client: genai.Client, file_path: str, lint_output: str) -> None:
     if not os.path.exists(file_path):
         print(f"File not found: {file_path}")
         return
@@ -64,9 +65,11 @@ Output ONLY the raw valid Python code without any markdown formatting, backticks
         
     with open(file_path, "w") as f:
         f.write(fixed_code)
+        if not fixed_code.endswith("\n"):
+            f.write("\n")
     print(f"Successfully applied fixes to {file_path}")
 
-def main():
+def main() -> None:
     returncode, stdout, stderr = run_linter()
     lint_output = stdout + "\n" + stderr
     

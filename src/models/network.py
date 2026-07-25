@@ -1,4 +1,5 @@
-from typing import List, Dict, Tuple, Self, Set, Any
+from typing import List, Dict, Tuple, Set, Any
+from typing_extensions import Self
 from pydantic import BaseModel, Field, model_validator
 from .zone import Zone
 from .connection import Connection
