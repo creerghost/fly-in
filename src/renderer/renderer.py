@@ -1,3 +1,5 @@
+"""Interactive Pygame visualizer for the drone simulation."""
+
 import os
 import sys
 import math
@@ -11,14 +13,14 @@ from .hud_stats import HudStats
 
 class PygameRenderer(Renderer):
     """
-    Handles the graphical display of the simulation using Pygame.
+    Handle the graphical display of the simulation using Pygame.
+
     Features an interactive time-scrubbing loop and a Heads-Up Display (HUD)
     for simulation analytics.
     """
+
     def __init__(self, network: Network, play_speed: float = 1) -> None:
-        """
-        Initialize the Pygame window and calculate canvas bounds.
-        """
+        """Initialize the Pygame window and calculate canvas bounds."""
         self.network = network
         self._canvas_size()
         self.play_speed = play_speed
@@ -56,9 +58,7 @@ class PygameRenderer(Renderer):
         self.width += width
 
     def _canvas_size(self) -> None:
-        """
-        Determine the boundaries of the grid based on zone coordinates.
-        """
+        """Determine the boundaries of the grid based on zone coordinates."""
         if not self.network.zones:
             raise ValueError("Zones not defined")
 
@@ -71,9 +71,7 @@ class PygameRenderer(Renderer):
         self.canvas_max_y = max(y_coords)
 
     def _get_pixel_coords(self, x: int, y: int) -> Tuple[int, int]:
-        """
-        Convert grid coordinates to Pygame pixel coordinates.
-        """
+        """Convert grid coordinates to Pygame pixel coordinates."""
         grid_center_x = (self.canvas_min_x + self.canvas_max_x) / 2
         grid_center_y = (self.canvas_min_y + self.canvas_max_y) / 2
 
@@ -95,6 +93,7 @@ class PygameRenderer(Renderer):
     ) -> None:
         """
         Render the drone bitmap and label at the given pixel position.
+
         Red marker for nodes, gray for in-transit.
         """
         label = (drones_list[0].id if len(drones_list) == 1
@@ -123,6 +122,7 @@ class PygameRenderer(Renderer):
     def run(self, drones: List[Drone]) -> None:
         """
         Start the interactive visualizer loop.
+
         Calculates HUD metrics and continuously renders drones, maps,
         and analytics while processing user inputs.
         """
@@ -150,6 +150,7 @@ class PygameRenderer(Renderer):
     def _handle_time_and_events(self, max_turn: float, dt: float) -> None:
         """
         Process keyboard events for pausing, scrubbing time, and quitting.
+
         Updates the global `current_time` based on user input and delta time.
         """
         for event in pygame.event.get():
@@ -181,15 +182,16 @@ class PygameRenderer(Renderer):
         self.current_time = max(0.0, min(float(max_turn), self.current_time))
 
     def _get_loc(self, drone: Drone, t: int) -> str:
-        """
-        Determine the string representation of a drone's location at a specific
-        integer turn. Formats mid-transit locations as `zone1-zone2`.
+        """Determine the string representation of a drone's location at a turn.
+
+        Formats mid-transit locations as `zone1-zone2`.
         """
         return drone.location_at_turn(t)
 
     def _print_turn_output(self, drones: List[Drone]) -> None:
         """
         Print drone movements to standard output as simulation time advances.
+
         Only prints when the time scrubs forward past a new integer turn.
         """
         while self.highest_turn_printed < int(self.current_time):
@@ -205,9 +207,7 @@ class PygameRenderer(Renderer):
                 print(" ".join(turn_output))
 
     def _draw_overlays(self) -> None:
-        """
-        Render the global turn counter and window title.
-        """
+        """Render the global turn counter and window title."""
         self.screen.blit(
             self.large_font.render(
                 f"Turn {int(self.current_time)}",
@@ -223,8 +223,9 @@ class PygameRenderer(Renderer):
 
     def _draw_connections(self) -> None:
         """
-        Render the network edges between zones, slightly offset to prevent
-        overlapping bidirectional connections.
+        Render the network edges between zones.
+
+        Slightly offset to prevent overlapping bidirectional connections.
         """
         for con in self.network.connections:
             z1 = self.network[con.name1]
@@ -247,8 +248,10 @@ class PygameRenderer(Renderer):
 
     def _draw_zones(self) -> None:
         """
-        Render the network nodes (hubs) along with their metadata, capacity,
-        and type abbreviations (e.g. 'Start', 'End', 'R', 'P').
+        Render the network nodes (hubs).
+
+        Renders along with their metadata, capacity, and type abbreviations
+        (e.g. 'Start', 'End', 'R', 'P').
         """
         for zone in self.network.zones.values():
             px, py = self._get_pixel_coords(zone.x, zone.y)
@@ -294,8 +297,9 @@ class PygameRenderer(Renderer):
 
     def _draw_drones(self, drones: List[Drone]) -> None:
         """
-        Calculate interpolated drone positions based on the current time and
-        render their markers. Groups overlapping drones visually.
+        Calculate interpolated drone positions based on the current time.
+
+        Render their markers and groups overlapping drones visually.
         """
         drone_groups: Dict[Tuple[int, int], List[Drone]] = {}
         drone_transits: Dict[Tuple[int, int], bool] = {}
@@ -350,8 +354,9 @@ class PygameRenderer(Renderer):
 
     def _draw_hud(self) -> None:
         """
-        Render the analytics panel and keyboard controls at the bottom of the
-        visualizer window.
+        Render the analytics panel and keyboard controls.
+
+        Displayed at the bottom of the visualizer window.
         """
         panel_rect = pygame.Rect(
             0, self.height - self.panel_height, self.width, self.panel_height)

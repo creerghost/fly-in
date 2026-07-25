@@ -1,3 +1,5 @@
+"""Main application entry point for the simulation."""
+
 from ..parsers import Parser, ArgParser
 from ..algorithm.factory import PathfinderFactory
 from ..interfaces import Pathfinder, Engine, Renderer
@@ -6,8 +8,11 @@ import sys
 
 
 class Application():
+    """Main application class."""
+
     @staticmethod
     def run() -> None:
+        """Run the simulation application."""
         visual = False
         try:
             args = ArgParser.parse()

@@ -1,3 +1,5 @@
+"""Parser module for reading and validating map configuration files."""
+
 from typing import List, Dict, Any, Tuple
 from ..models import Network
 from ..models.zone import Zone
@@ -5,13 +7,10 @@ from ..models.connection import Connection
 
 
 class Parser:
-    """
-    Parses and validates the map configuration file.
-    """
+    """Parser for reading and validating the map configuration file."""
+
     def __init__(self, filepath: str) -> None:
-        """
-        Initialize the parser with the target file path.
-        """
+        """Initialize the parser with the target file path."""
         self.filepath = filepath
 
         self.nb_drones: int = 0
@@ -25,6 +24,7 @@ class Parser:
     def parse(self) -> Network:
         """
         Read and parse the file line by line, then validate constraints.
+
         Returns a fully constructed Network domain object.
         """
         try:
@@ -62,9 +62,7 @@ class Parser:
         )
 
     def _parse_line(self, line: str, line_num: int) -> None:
-        """
-        Parse an individual line from the configuration file.
-        """
+        """Parse an individual line from the configuration file."""
         if line.startswith("nb_drones"):
             drones = line.split(":")
             if len(drones) != 2 or not drones[1].strip().isdigit():
@@ -104,6 +102,7 @@ class Parser:
 
     @staticmethod
     def _parse_metadata(line: str) -> Tuple[str, Dict[str, str]]:
+        """Extract metadata tags from brackets inside a line string."""
         if "[" in line or "]" in line:
             if (line.count("[") != 1 or
                     line.count("]") != 1 or
@@ -128,9 +127,7 @@ class Parser:
         return base_info, data
 
     def _parse_zone_line(self, line: str) -> Zone:
-        """
-        Extract node data and metadata attributes from a zone string.
-        """
+        """Extract node data and metadata attributes from a zone string."""
         base_info_str, meta_data = self._parse_metadata(line)
         base_info = base_info_str.split()
 
@@ -147,9 +144,7 @@ class Parser:
         return Zone(**zone_data)
 
     def _parse_connection_line(self, line: str) -> Connection:
-        """
-        Extract edge data and link capacity metadata from a connection string.
-        """
+        """Extract edge data and link capacity from a connection string."""
         base_info_str, meta_data = self._parse_metadata(line)
         names = base_info_str.split("-")
 

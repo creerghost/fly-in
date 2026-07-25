@@ -1,10 +1,11 @@
+"""Color constants for Pygame rendering."""
+
 from enum import Enum
 
 
 class Colors(Enum):
-    """
-    Stores colors used for rendering.
-    """
+    """Store colors used for rendering UI components."""
+
     GREEN = (34, 139, 34)
     BLUE = (65, 105, 225)
     RED = (220, 20, 60)

@@ -1,3 +1,5 @@
+"""Cooperative A* pathfinding algorithm implementation."""
+
 from typing import List, Tuple
 from ...models import Network, Zone, TemporalState
 from ...interfaces import Manager
@@ -6,22 +8,23 @@ from .a_star import AStarAlgorithm
 
 class CooperativeAStar(AStarAlgorithm):
     """
-    Implements Cooperative Space-Time A* pathfinding algorithms respecting
-    reservation constraints.
+    Implement Cooperative Space-Time A* pathfinding algorithms.
+
+    Respects reservation constraints.
     """
+
     def __init__(self, network: Network,
                  reservations: Manager) -> None:
         """
-        Initialize the pathfinder with the network topology and global
-        reservation table.
+        Initialize the pathfinder with the network topology.
+
+        Uses the global reservation table.
         """
         super().__init__(network)
         self.reservations = reservations
 
     def on_path_found(self, path: List[Tuple[str, int]]) -> None:
-        """
-        Register the finalized path in the collision manager.
-        """
+        """Register the finalized path in the collision manager."""
         self.reservations.register_path(path)
 
     def generate_valid_neighbors(self,
@@ -29,8 +32,9 @@ class CooperativeAStar(AStarAlgorithm):
                                  target_zone: str
                                  ) -> List[TemporalState]:
         """
-        Generate all valid neighboring TemporalStates, considering wait
-        actions, zone types, and capacity limits.
+        Generate all valid neighboring TemporalStates.
+
+        Considers wait actions, zone types, and capacity limits.
         """
         next_turn = current_state.turn + 1
         neighbors: List[TemporalState] = []

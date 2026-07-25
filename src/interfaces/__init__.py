@@ -1,3 +1,5 @@
+"""Interface definitions for the simulator components."""
+
 from .runnable import Runnable
 from .algorithm import Pathfinder
 from .engine import Engine

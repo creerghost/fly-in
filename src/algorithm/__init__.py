@@ -1,3 +1,1 @@
-from .coop_a_star import CollisionManager, CooperativeAStar
-
-__all__ = ["CollisionManager", "CooperativeAStar"]
+"""Pathfinding algorithms for the simulation."""

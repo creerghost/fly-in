@@ -1,11 +1,15 @@
+"""Connection models representing edges in the drone network."""
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class Connection(BaseModel):
     """
-    Represents a navigable path or link between two zones
-    with a specific traffic capacity.
+    Represent a navigable path or link between two zones.
+
+    Contains a specific traffic capacity.
     """
+
     model_config = ConfigDict(extra='forbid')
 
     name1: str

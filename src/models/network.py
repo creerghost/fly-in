@@ -1,3 +1,5 @@
+"""Network topology and graph representations."""
+
 from typing import List, Dict, Tuple, Set, Any
 from typing_extensions import Self
 from pydantic import BaseModel, Field, model_validator
@@ -7,10 +9,11 @@ from .connection import Connection
 
 class Network(BaseModel):
     """
-    Top-level configuration model that validates the entire
-    network topology including zones and their connections.
-    Builds searchable adjacency lists and graph structures for pathfinding.
+    Top-level configuration model that validates the entire network topology.
+
+    Validates zones, connections, and builds searchable adjacency lists.
     """
+
     nb_drones: int = Field(gt=0)
     start_hub: Zone
     end_hub: Zone
@@ -24,9 +27,7 @@ class Network(BaseModel):
 
     @model_validator(mode="after")
     def check_duplicate_zones(self) -> Self:
-        """
-        Validate that all zone names and coordinates are strictly unique.
-        """
+        """Validate that all zone names and coordinates are strictly unique."""
         zones: List[Zone] = [self.start_hub, self.end_hub]
         if self.hubs:
             zones.extend(self.hubs)
@@ -44,8 +45,9 @@ class Network(BaseModel):
     @model_validator(mode="after")
     def check_connections(self) -> Self:
         """
-        Validate that all connections reference valid existing zones
-        and that no duplicate connections exist.
+        Validate that all connections reference valid existing zones.
+
+        Also checks that no duplicate connections exist.
         """
         zones: List[str] = [self.start_hub.name, self.end_hub.name]
         if self.hubs:
@@ -68,8 +70,9 @@ class Network(BaseModel):
 
     def model_post_init(self, __context: Any) -> None:
         """
-        Extract Zone and Connection objects from the validated configuration
-        and store them for quick lookup. Build adjacency lists.
+        Extract Zone and Connection objects from the validated configuration.
+
+        Stores them for quick lookup and builds adjacency lists.
         """
         self.start_hub.max_drones = self.nb_drones
         self.end_hub.max_drones = self.nb_drones
@@ -90,15 +93,19 @@ class Network(BaseModel):
                 (self.zones[con.name1], con))
 
     def __len__(self) -> int:
+        """Return the number of zones in the network."""
         return len(self.zones)
 
     def __contains__(self, zone_name: str) -> bool:
+        """Check if a zone exists in the network by name."""
         return zone_name in self.zones
 
     def __getitem__(self, zone_name: str) -> Zone:
+        """Get a zone from the network by its name."""
         return self.zones[zone_name]
 
     def __str__(self) -> str:
+        """Return a string representation of the network topology."""
         return (f"Network({len(self.zones)} zones, "
                 f"{len(self.connections)} connections, "
                 f"{self.nb_drones} drones)")

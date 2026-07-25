@@ -1,3 +1,5 @@
+"""Zone models representing nodes in the drone network."""
+
 from pydantic import BaseModel, ConfigDict, model_validator, Field
 from typing import Optional
 from typing_extensions import Self
@@ -5,9 +7,8 @@ from enum import Enum
 
 
 class ZoneType(str, Enum):
-    """
-    Enumeration of valid zone types for the drone network.
-    """
+    """Enumeration of valid zone types for the drone network."""
+
     NORMAL = "normal"
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
@@ -15,6 +16,7 @@ class ZoneType(str, Enum):
 
     @property
     def display_label(self) -> Optional[str]:
+        """Return a single-character label for the UI renderer."""
         if self == ZoneType.RESTRICTED:
             return "R"
         elif self == ZoneType.BLOCKED:
@@ -26,9 +28,12 @@ class ZoneType(str, Enum):
 
 class Zone(BaseModel):
     """
-    Represents a specific geographic location in the network
-    that drones can travel between.
+    Represent a specific geographic location in the network.
+
+    Drones can travel between these locations, and each zone
+    imposes certain constraints like max capacity and movement cost.
     """
+
     model_config = ConfigDict(extra='forbid', populate_by_name=True)
 
     name: str
@@ -41,8 +46,9 @@ class Zone(BaseModel):
     @model_validator(mode="after")
     def check_zone(self) -> Self:
         """
-        Ensure the zone name does not contain any dashes,
-        as they are reserved for connection names.
+        Ensure the zone name does not contain any dashes.
+
+        Dashes are reserved for parsing connection strings.
         """
         if "-" in self.name:
             raise ValueError("Zone name should not contain dashes: "
@@ -51,10 +57,12 @@ class Zone(BaseModel):
 
     @property
     def is_traversable(self) -> bool:
+        """Return True if drones are allowed to enter this zone."""
         return self.zone_type != ZoneType.BLOCKED
 
     @property
     def movement_cost(self) -> float:
+        """Return the A* cost multiplier for moving into this zone."""
         if self.zone_type == ZoneType.RESTRICTED:
             return 2.0
         elif self.zone_type == ZoneType.PRIORITY:
@@ -63,6 +71,7 @@ class Zone(BaseModel):
 
     @property
     def transit_time(self) -> int:
+        """Return the physical number of turns required to enter this zone."""
         if self.zone_type == ZoneType.RESTRICTED:
             return 2
         return 1

@@ -1,3 +1,5 @@
+"""Factory for creating pathfinding algorithms."""
+
 from ..models import Network
 from ..interfaces import Pathfinder
 from .coop_a_star.algorithm import CooperativeAStar
@@ -5,8 +7,11 @@ from .coop_a_star.manager import CollisionManager
 
 
 class PathfinderFactory:
+    """Factory class for instantiating pathfinders."""
+
     @staticmethod
     def create(algo: str, network: Network) -> Pathfinder:
+        """Create a pathfinder instance based on algorithm name."""
         if algo == "coop":
             collision_manager = CollisionManager()
             return CooperativeAStar(network, collision_manager)

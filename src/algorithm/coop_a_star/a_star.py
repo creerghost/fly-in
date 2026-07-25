@@ -1,3 +1,5 @@
+"""Base A* pathfinding algorithm implementation."""
+
 from abc import abstractmethod
 from typing import List, Optional, Tuple, Set
 from heapq import heappop, heappush
@@ -6,19 +8,17 @@ from ...interfaces import Pathfinder
 
 
 class AStarAlgorithm(Pathfinder):
-    """
-    Abstract base class for A* based pathfinding algorithms.
-    """
+    """Abstract base class for A* based pathfinding algorithms."""
+
     def __init__(self, network: Network) -> None:
-        """
-        Initialize the pathfinder with the network topology.
-        """
+        """Initialize the pathfinder with the network topology."""
         self.network = network
 
     def _calculate_h(self, current_zone: str, target_zone: str) -> float:
         """
-        Calculate a scaled Manhattan distance heuristic to maintain
-        admissibility.
+        Calculate a scaled Manhattan distance heuristic.
+
+        This maintains admissibility.
         """
         return float(abs(self.network[current_zone].x -
                      self.network[target_zone].x) +
@@ -32,21 +32,18 @@ class AStarAlgorithm(Pathfinder):
                                  ) -> List[TemporalState]:
         """
         Generate all valid neighboring TemporalStates.
+
         Must be implemented by subclasses.
         """
         pass
 
     def get_state_key(self, state: TemporalState) -> Tuple[str, int] | str:
-        """
-        Space-Time A* uses both zone_name and turn as the state key.
-        """
+        """Return a state key for Space-Time A* using zone_name and turn."""
         return (state.zone_name, state.turn)
 
     @abstractmethod
     def on_path_found(self, path: List[Tuple[str, int]]) -> None:
-        """
-        Hook for subclasses to act when a path is successfully found.
-        """
+        """Execute a hook for subclasses to act when a path is found."""
         pass
 
     def find_routes(self,
@@ -54,8 +51,9 @@ class AStarAlgorithm(Pathfinder):
                     end_zone: str
                     ) -> Optional[List[Tuple[str, int]]]:
         """
-        Run the A* search from start_zone to end_zone,
-        returning a list of (zone_name, turn) states if a path exists.
+        Run the A* search from start_zone to end_zone.
+
+        Returns a list of (zone_name, turn) states if a path exists.
         """
         start_state = TemporalState(
             f_cost=0.0,

@@ -1,9 +1,14 @@
+"""Command line argument parser for the simulator."""
+
 import argparse
 
 
 class ArgParser():
+    """Parser wrapper for command line arguments."""
+
     @staticmethod
     def parse() -> argparse.Namespace:
+        """Parse arguments and return a namespace."""
         argparser = argparse.ArgumentParser(
             description="Fly-in Drone Simulator"
             )

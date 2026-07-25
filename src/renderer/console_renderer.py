@@ -1,3 +1,5 @@
+"""Command-line output renderer for the simulation."""
+
 from typing import List
 from ..models import Drone
 from ..models.drone import DroneStatus
@@ -6,10 +8,13 @@ from ..interfaces import Renderer
 
 class ConsoleRenderer(Renderer):
     """
-    Executes a turn-by-turn console simulation.
+    Execute a turn-by-turn console simulation.
+
     Updates drone status and location, printing movements to stdout.
     """
+
     def run(self, drones: List[Drone]) -> None:
+        """Run the console simulation."""
         turn = 1
 
         while True:

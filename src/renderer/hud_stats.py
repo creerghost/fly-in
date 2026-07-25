@@ -1,3 +1,5 @@
+"""Heads-up display statistics for the visualizer."""
+
 from dataclasses import dataclass
 from typing import List, TYPE_CHECKING
 
@@ -7,18 +9,22 @@ if TYPE_CHECKING:
 
 @dataclass
 class HudStats:
+    """Store and compute statistics to display on the visual HUD."""
+
     total_drones: int
     active_drones: int
     avg_turns: float
     total_cost: float
 
     def __str__(self) -> str:
+        """Return a string representation of the stats."""
         return (f"Stats(Total: {self.total_drones}, "
                 f"Active: {self.active_drones}, "
                 f"Avg Turns: {self.avg_turns:.1f}, "
                 f"Cost: {self.total_cost:.1f})")
 
     def __repr__(self) -> str:
+        """Return a detailed string representation of the stats."""
         return (f"HudStats(total={self.total_drones}, "
                 f"active={self.active_drones}, "
                 f"avg={self.avg_turns:.2f}, "
@@ -28,6 +34,7 @@ class HudStats:
     def from_drones(
         cls, drones: List['Drone'], network: 'Network'
     ) -> 'HudStats':
+        """Compute all static HUD statistics based on planned drone paths."""
         total_cost_stats: int = 0
         total_drones = len(drones)
 
