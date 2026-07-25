@@ -19,4 +19,8 @@ class ArgParser():
             "--speed", type=float, default=1,
             help="Set up the speed of the animation"
             )
+        argparser.add_argument(
+            "--algo", type=str, choices=["coop"], default="coop",
+            help="Select the pathfinding algorithm to use"
+            )
         return argparser.parse_args()

@@ -1,7 +1,7 @@
 from ..parsers import Parser, ArgParser
 from ..engine import SimulationEngine
-from ..algorithm import CooperativeAStar, CollisionManager
-from ..interfaces import Pathfinder, Engine, Manager
+from ..algorithm.factory import PathfinderFactory
+from ..interfaces import Pathfinder, Engine
 import sys
 
 
@@ -15,9 +15,7 @@ class Application():
             parser = Parser(args.filename)
             network = parser.parse()
 
-            collision_manager: Manager = CollisionManager()
-            pathfinder: Pathfinder = CooperativeAStar(
-                network, collision_manager)
+            pathfinder: Pathfinder = PathfinderFactory.create(args.algo, network)
 
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
