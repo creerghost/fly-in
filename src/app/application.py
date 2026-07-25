@@ -15,7 +15,9 @@ class Application():
             parser = Parser(args.filename)
             network = parser.parse()
 
-            pathfinder: Pathfinder = PathfinderFactory.create(args.algo, network)
+            pathfinder: Pathfinder = PathfinderFactory.create(
+                args.algo, network
+            )
 
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
