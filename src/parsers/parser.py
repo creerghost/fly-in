@@ -84,8 +84,20 @@ class Parser:
                 line.replace("hub:", "").strip())
             self._hubs.append(hub)
         elif line.startswith("connection:"):
-            self._connections.append(self._parse_connection_line(
-                line.replace("connection:", "").strip()))
+            conn = self._parse_connection_line(
+                line.replace("connection:", "").strip())
+
+            defined_zones = {h.name for h in self._hubs}
+            if self._start_hub:
+                defined_zones.add(self._start_hub.name)
+            if self._end_hub:
+                defined_zones.add(self._end_hub.name)
+
+            if (conn.name1 not in defined_zones or
+                    conn.name2 not in defined_zones):
+                raise ValueError("Connection links to undefined zone")
+
+            self._connections.append(conn)
         else:
             raise ValueError(f"Line {line_num}: "
                              f"Unknown syntax on line '{line}'")

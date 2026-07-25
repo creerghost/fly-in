@@ -70,6 +70,9 @@ class Network(BaseModel):
         Extract Zone and Connection objects from the validated configuration
         and store them for quick lookup. Build adjacency lists.
         """
+        self.start_hub.max_drones = self.nb_drones
+        self.end_hub.max_drones = self.nb_drones
+
         self.zones[self.start_hub.name] = self.start_hub
         if self.hubs:
             for hub in self.hubs:
