@@ -1,25 +1,22 @@
 from typing import List
 from ..models import Drone
 from ..models.drone import DroneStatus
-from ..interfaces import Runnable
+from ..interfaces import Renderer
 
 
-class SimulationRunner(Runnable):
+class ConsoleRenderer(Renderer):
     """
     Executes a turn-by-turn console simulation.
     Updates drone status and location, printing movements to stdout.
     """
-    def __init__(self, drones: List[Drone]) -> None:
-        self.drones = drones
-
-    def run(self) -> None:
+    def run(self, drones: List[Drone]) -> None:
         turn = 1
 
         while True:
             all_finished = True
             turn_output = []
 
-            for drone in self.drones:
+            for drone in drones:
                 prev_location = drone.current_location
 
                 if turn > drone.path[-1][1]:

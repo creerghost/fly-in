@@ -1,6 +1,5 @@
 from ..models import Drone, Network
 from ..interfaces import Engine, Pathfinder
-from .simulation_runner import SimulationRunner
 
 
 class SimulationEngine(Engine):
@@ -43,10 +42,6 @@ class SimulationEngine(Engine):
     def run(self) -> None:
         """
         Run the simulation by initializing drones and planning routes.
-        Executes a turn-by-turn console simulation.
         """
         self._init_drones()
         self._plan_routes()
-
-        runner = SimulationRunner(self.drones)
-        runner.run()

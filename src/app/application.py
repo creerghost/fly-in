@@ -1,7 +1,7 @@
 from ..parsers import Parser, ArgParser
-from ..engine import SimulationEngine
 from ..algorithm.factory import PathfinderFactory
-from ..interfaces import Pathfinder, Engine
+from ..interfaces import Pathfinder, Engine, Renderer
+from ..engine import SimulationEngine
 import sys
 
 
@@ -22,11 +22,14 @@ class Application():
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
 
-            if visual:
+            if not visual:
+                from ..renderer import ConsoleRenderer
+                renderer: Renderer = ConsoleRenderer()
+            else:
                 from ..renderer import PygameRenderer
-                from ..interfaces import Renderer
-                renderer: Renderer = PygameRenderer(network, args.speed)
-                renderer.run(engine.drones)
+                renderer = PygameRenderer(network, args.speed)
+
+            renderer.run(engine.drones)
 
         except Exception as e:
             print(f"Error: {e}")
