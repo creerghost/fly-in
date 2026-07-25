@@ -2,28 +2,165 @@
 
 # Fly-in
 
+A Python simulation of drones moving through a graph of zones and connections while respecting turn-based movement, zone occupancy, and connection capacity rules.
+
+The main goal is to route every drone from the **start hub** to the **end hub** in as few turns as possible while avoiding collisions and respecting all capacity constraints.
+
+---
+
+## Table of Contents
+
+- [Description](#description)
+- [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+- [Instructions](#instructions)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Run](#run)
+  - [Map Format](#map-format)
+- [Algorithm and Implementation Strategy](#algorithm-and-implementation-strategy)
+  - [Application Pipeline](#application-pipeline)
+  - [Pathfinding: Cooperative Space-Time A*](#pathfinding-cooperative-space-time-a)
+  - [How the Heuristic Works](#how-the-heuristic-works)
+  - [Generating Space-Time Neighbors](#generating-space-time-neighbors)
+  - [Priority Queue (heapq)](#priority-queue-heapq)
+  - [Complexity](#complexity)
+  - [Caching and Recalculation](#caching-and-recalculation)
+  - [Memory Usage](#memory-usage)
+  - [Advantages and Disadvantages](#advantages-and-disadvantages)
+- [Simulation Output](#simulation-output)
+- [Visual Representation](#visual-representation)
+- [Useful Commands](#useful-commands)
+- [Resources](#resources)
+- [AI Usage](#ai-usage)
+
+---
+
 ## Description
 
-Fly-in is a Python simulation of drones moving through a graph of zones and connections while respecting turn-based movement, zone occupancy, and connection capacity rules.
+Fly-in is built around a modular, interface-driven architecture:
 
-The project includes:
+- **Parser** — reads and validates a custom map format into a `Network` domain model.
+- **Models** — `Zone`, `Connection`, `Drone`, and `Network` represent the simulation data using Pydantic and dataclasses.
+- **Interfaces** — abstract base classes (`Pathfinder`, `Engine`, `Renderer`, `Manager`, `Runnable`) define contracts that all components implement.
+- **Algorithm** — a Cooperative Space-Time A* pathfinder plans collision-free routes for every drone sequentially.
+- **Engine** — creates drones, delegates route planning to the pathfinder, and produces a list of planned paths.
+- **Renderer** — two interchangeable implementations: a console printer and an interactive Pygame visualizer.
 
-- a parser for the custom map format,
-- a network model that converts parsed data into zones and connections,
-- a space-time pathfinding strategy that plans routes for multiple drones,
-- a simulation engine that prints each turn of movement,
-- an optional live visualizer built with Pygame.
+Every component depends on interfaces rather than concrete classes, making it easy to swap out the pathfinding algorithm, add a new renderer, or change the simulation engine without touching the rest of the code.
 
-The main goal is to route every drone from the start hub to the end hub in as few turns as possible while avoiding collisions and respecting all capacity constraints.
+---
+
+## Project Structure
+
+```
+fly-in/
+├── fly_in.py                 # Legacy entry point (calls src.__main__)
+├── pyproject.toml             # Project metadata and dependencies (uv)
+├── Makefile                   # Build, run, lint, and clean targets
+├── imgs/
+│   └── drone.bmp              # Drone sprite for the Pygame visualizer
+├── maps/                      # Example map files
+│   ├── easy/
+│   ├── medium/
+│   ├── hard/
+│   └── challenger/
+├── scripts/
+│   └── auto_lint_fixer.py     # CI linter helper
+└── src/                       # Main source package
+    ├── __init__.py
+    ├── __main__.py            # Entry point: python -m src
+    ├── app/
+    │   └── application.py     # Application — wires everything together
+    ├── interfaces/            # Abstract base classes (contracts)
+    │   ├── runnable.py        #   Runnable — anything with a run() method
+    │   ├── algorithm.py       #   Pathfinder — find_routes()
+    │   ├── engine.py          #   Engine — extends Runnable, exposes drones
+    │   ├── renderer.py        #   Renderer — run(drones)
+    │   └── collision_manager.py  # Manager — zone/link availability
+    ├── models/                # Domain models
+    │   ├── zone.py            #   Zone + ZoneType enum
+    │   ├── connection.py      #   Connection (edge between zones)
+    │   ├── drone.py           #   Drone + DroneStatus enum
+    │   ├── network.py         #   Network (validated graph + adjacency lists)
+    │   └── temporal_state.py  #   TemporalState (A* search node)
+    ├── parsers/               # Input parsing
+    │   ├── arg_parser.py      #   CLI argument parser (argparse)
+    │   └── parser.py          #   Map file parser → Network
+    ├── algorithm/             # Pathfinding strategies
+    │   ├── factory.py         #   PathfinderFactory (creates algorithm by name)
+    │   └── coop_a_star/       #   Cooperative Space-Time A* implementation
+    │       ├── a_star.py      #     AStarAlgorithm (abstract base)
+    │       ├── algorithm.py   #     CooperativeAStar (concrete implementation)
+    │       └── manager.py     #     CollisionManager (reservation table)
+    ├── engine/
+    │   └── engine.py          # SimulationEngine — drone lifecycle + routing
+    └── renderer/              # Output / visualization
+        ├── colors.py          #   Color enum for Pygame
+        ├── hud_stats.py       #   HUD statistics dataclass
+        ├── console_renderer.py  # ConsoleRenderer — prints turns to stdout
+        └── renderer.py        #   PygameRenderer — interactive visualizer
+```
+
+---
+
+## Architecture Overview
+
+The project follows an object-oriented design where every major component implements an abstract interface. This diagram shows how the key classes relate to each other:
+
+```mermaid
+classDiagram
+    class Runnable {
+        <<interface>>
+        +run() None
+    }
+    class Engine {
+        <<interface>>
+        +drones: List~Drone~
+    }
+    class Pathfinder {
+        <<interface>>
+        +find_routes(start, end) List~Tuple~ | None
+    }
+    class Renderer {
+        <<interface>>
+        +run(drones) None
+    }
+    class Manager {
+        <<interface>>
+        +is_zone_available()
+        +is_link_available()
+        +register_path()
+    }
+
+    Runnable <|-- Engine
+    Engine <|.. SimulationEngine
+    Pathfinder <|.. AStarAlgorithm
+    AStarAlgorithm <|-- CooperativeAStar
+    Manager <|.. CollisionManager
+    Renderer <|.. ConsoleRenderer
+    Renderer <|.. PygameRenderer
+
+    SimulationEngine --> Pathfinder : uses
+    CooperativeAStar --> Manager : uses
+    Application --> SimulationEngine : creates
+    Application --> Renderer : creates
+    PathfinderFactory --> Pathfinder : creates
+```
+
+**Why interfaces?** By coding against `Pathfinder` instead of `CooperativeAStar`, the `SimulationEngine` does not need to know _which_ algorithm is being used. If you write a new algorithm (e.g., `CBSAlgorithm`), you just implement the `Pathfinder` interface and register it in `PathfinderFactory` — zero changes in the engine.
+
+---
 
 ## Instructions
 
 ### Requirements
 
-- make
-- mypy & flake8
-- Python >= 3.13.1
-- `pygame` >= 2.0.0
+- **make**
+- **Python >= 3.10**
+- **[uv](https://docs.astral.sh/uv/)** — fast Python package manager (replaces pip/venv)
+- `pygame >= 2.0.0`
+- `pydantic >= 2.5.0`
 
 ### Installation
 
@@ -31,40 +168,41 @@ The main goal is to route every drone from the start hub to the end hub in as fe
 make install
 ```
 
-This creates a local virtual environment and installs the project dependencies from `requirements.txt`.
+This uses `uv sync` to create a virtual environment and install all project dependencies from `pyproject.toml`.
 
 ### Run
 
-The `make run` command is configured to automatically generate a comprehensive temporary test map in the background. This map covers all possible zone types, colors, and capacities, and is instantly cleaned up without leaving any trace after the simulation ends.
+Running `make run` without a `FILE` argument auto-generates a temporary test map that covers all zone types, colors, and capacities. The temp file is cleaned up automatically after the simulation ends.
 
 ```bash
 make run
 ```
 
-You can also override the default map or simulation arguments by passing flags to `make`:
+You can also provide your own map or extra arguments:
+
 ```bash
 # Run a specific map
 make run FILE=maps/hard/02_capacity_hell.txt
 
-# Run with custom arguments (e.g., visualizer enabled, 2.0x playback speed)
+# Enable the Pygame visualizer at 2x speed
 make run ARGS="--visual --speed=2.0"
 
-# Override both
+# Combine both
 make run FILE=maps/hard/02_capacity_hell.txt ARGS="--visual"
 ```
 
-> [!TIP]
-> When running with the visualizer, you can pause and resume the simulation at any time by pressing the **Space** bar, reset the simulation with **R**, or quit with **Esc**. You can also scrub through the simulation with the **Left** and **Right** arrow keys.
-
-Or run the simulator manually with specific maps:
+Or run the simulator directly:
 
 ```bash
-python3 fly_in.py maps/easy/01_linear_path.txt
-python3 fly_in.py maps/medium/03_priority_puzzle.txt --visual
-python3 fly_in.py maps/hard/02_capacity_hell.txt --visual --speed 2.0
+python -m src maps/easy/01_linear_path.txt
+python -m src maps/medium/03_priority_puzzle.txt --visual
+python -m src maps/hard/02_capacity_hell.txt --visual --speed 2.0
 ```
 
-### Map format
+> [!TIP]
+> When running with the visualizer, you can **pause/resume** with `Space`, **scrub time** with `Left`/`Right` arrow keys, **reset** with `R`, or **quit** with `Esc`.
+
+### Map Format
 
 The parser expects a text file with:
 
@@ -74,17 +212,21 @@ The parser expects a text file with:
 - any number of `hub:` entries,
 - `connection:` entries between previously defined zones.
 
-Supported zone metadata includes:
+**Zone metadata** (inside `[brackets]`):
 
-- `zone=normal|blocked|restricted|priority`,
-- `color=<name>`,
-- `max_drones=<positive_integer>`.
+| Key          | Values                                         | Default    |
+|--------------|-------------------------------------------------|------------|
+| `zone`       | `normal`, `blocked`, `restricted`, `priority`   | `normal`   |
+| `color`      | any named color (e.g., `green`, `cyan`, `gold`) | `white`    |
+| `max_drones` | positive integer                                | `1`        |
 
-Supported connection metadata includes:
+**Connection metadata:**
 
-- `max_link_capacity=<positive_integer>`.
+| Key                 | Values           | Default |
+|---------------------|------------------|---------|
+| `max_link_capacity` | positive integer | `1`     |
 
-Example:
+**Example map:**
 
 ```text
 nb_drones: 4
@@ -97,128 +239,179 @@ connection: a-b [max_link_capacity=1]
 connection: b-goal [max_link_capacity=1]
 ```
 
-**Parser Validation Constraints:**
-- Exactly one `start_hub` and `end_hub` must be present.
-- Zone names cannot contain dashes (`-`), as dashes are reserved for string parsing and connection delimiting.
-- Duplicate zone names or connections are strictly rejected.
+**Validation rules:**
+- Exactly one `start_hub` and one `end_hub` must be present.
+- Zone names cannot contain dashes (`-`), since dashes are used to delimit connection endpoints.
+- Duplicate zone names, coordinates, or connections are rejected.
 - Negative capacities or drone counts are rejected.
+- Connections to undefined or self-referencing zones are rejected.
+- Invalid zone types (anything other than `normal`, `blocked`, `restricted`, `priority`) are rejected.
+- The `max_drones` metadata on `start_hub` and `end_hub` is **ignored** — these zones have unlimited capacity.
 
-## Algorithm And Implementation Strategy
+---
 
-The simulator uses a staged approach:
+## Algorithm and Implementation Strategy
 
-1. The parser reads and validates the input file.
-2. The `Network` class turns the parsed dictionaries into `Zone` and `Connection` objects and builds adjacency lists.
-3. The `Engine` creates all drones, then plans a route for each drone before the turn-by-turn simulation begins.
-4. The pathfinder runs a space-time A* search with a reservation table.
+### Application Pipeline
 
-### Pathfinding approach: Cooperative Space-Time A*
+This is what happens when you run the simulator end-to-end:
 
-The core problem is Multi-Agent Pathfinding. To solve this efficiently without the exponential overhead of joint-state searching, the project uses a **Cooperative Space-Time A*** algorithm.
+```mermaid
+flowchart TD
+    A["__main__.py"] --> B["Application.run()"]
+    B --> C["ArgParser.parse()"]
+    C --> D["Parser.parse(file)"]
+    D --> E["Network\n(validated graph)"]
+    E --> F["PathfinderFactory.create(algo, network)"]
+    F --> G["CooperativeAStar\n+ CollisionManager"]
+    G --> H["SimulationEngine(network, pathfinder)"]
+    H --> I["engine.run()"]
+    I --> I1["_init_drones()"]
+    I1 --> I2["_plan_routes()\nfor each drone: pathfinder.find_routes()"]
+    I2 --> J{{"--visual flag?"}}
+    J -->|No| K["ConsoleRenderer.run(drones)\nPrint turns to stdout"]
+    J -->|Yes| L["PygameRenderer.run(drones)\nInteractive window"]
+```
 
-Instead of searching in a standard 2D spatial graph, the algorithm searches in a **3D space-time graph** where the dimensions are `(Zone, Turn)`. 
+**Step by step:**
 
-1. **Sequential Planning**: Drones are routed one by one. The path found for the current drone is fixed in time and space.
-2. **Reservation Table**: Once a drone's path is found, it "reserves" the zones and connections it uses at specific turns.
-3. **Space-Time A* Search**: When the next drone plans its route, it runs standard A*, but its movement is constrained by the reservation table. If moving to `Zone B` at `Turn T` exceeds the zone's capacity, that space-time node is treated as an obstacle.
-4. **Waiting**: Because time always advances, a drone can "wait" at its current zone (moving from `(Zone A, Turn T)` to `(Zone A, Turn T+1)`), provided it doesn't violate the zone's capacity. This is critical for letting earlier drones pass through chokepoints.
+1. `Application.run()` parses CLI arguments and reads the map file.
+2. `Parser` validates the file line-by-line and builds a `Network` object (Pydantic model with validators).
+3. `PathfinderFactory.create()` picks the algorithm by name (currently only `"coop"`) and injects a fresh `CollisionManager`.
+4. `SimulationEngine` receives the `Network` and `Pathfinder` via its constructor (dependency injection through interfaces).
+5. `engine.run()` creates the drone fleet and plans a route for each drone sequentially. Each planned path is immediately registered in the `CollisionManager`, so the next drone sees updated reservations.
+6. Finally, a `Renderer` (either `ConsoleRenderer` or `PygameRenderer`) visualizes the results.
 
-The search state explicitly includes:
+---
 
-- the current zone,
-- the current turn (which acts as the "depth" in the space-time graph),
-- the accumulated path cost,
-- a parent pointer used to rebuild the route.
+### Pathfinding: Cooperative Space-Time A*
 
-The reservation table acts as a fast 3D collision map, storing:
+The core problem is **Multi-Agent Pathfinding (MAPF)**. To solve this efficiently without the exponential overhead of joint-state searching, the project uses **Cooperative Space-Time A***.
 
-- zone occupancy counts by `(zone, turn)`, checked against `max_drones`,
-- link usage counts by `(connection, turn)`, checked against `max_link_capacity`,
-- edge-swap checks to prevent drones from crossing the same connection in opposite directions simultaneously.
+Instead of searching in a standard 2D spatial graph, the algorithm searches in a **3D space-time graph** where each node is `(Zone, Turn)`.
 
-This strategy guarantees collision-free routing, makes conflict checks `O(1)`, and keeps the simulation deterministic.
+```mermaid
+flowchart TD
+    subgraph "For each drone (sequential)"
+        S["Start: zone=start, turn=0"] --> Q["Priority Queue (min-heap)"]
+        Q --> POP["Pop lowest f_cost state"]
+        POP --> GOAL{"Reached end_hub?"}
+        GOAL -->|Yes| PATH["Reconstruct path via parent pointers"]
+        PATH --> REG["CollisionManager.register_path()\nReserve zone+link slots"]
+        GOAL -->|No| VIS{"Already visited\nthis (zone, turn)?"}
+        VIS -->|Yes| Q
+        VIS -->|No| GEN["generate_valid_neighbors()"]
+        GEN --> WAIT["Wait action:\nsame zone, turn+1"]
+        GEN --> MOVE["Move action:\nneighbor zone, turn + transit_time"]
+        WAIT --> CAP1{"Zone has\ncapacity?"}
+        MOVE --> CAP2{"Zone + link\nhave capacity?"}
+        CAP1 -->|Yes| Q
+        CAP2 -->|Yes| Q
+        CAP1 -->|No| DROP1["Pruned"]
+        CAP2 -->|No| DROP2["Pruned"]
+    end
+```
 
-### Movement rules and Heuristics
+**Key ideas:**
 
-**A-Star Search Theory:**
-A* is a best-first search algorithm that finds the least-cost path by maintaining a priority queue based on the cost function `f(n) = g(n) + h(n)`:
-- `g(n)` represents the exact accumulated cost from the start node to the current node `n`.
-- `h(n)` represents the heuristic function, an estimated cost from node `n` to the goal.
+1. **Sequential Planning** — drones are routed one at a time. Once a drone's path is found, it is locked in.
+2. **Reservation Table** — the `CollisionManager` stores which zones and links are occupied at each turn. Future drones check this table before committing to a move.
+3. **Waiting** — a drone can "wait" at its current zone (same zone, turn + 1) if the path ahead is blocked, provided the zone still has capacity.
+4. **Zone Types** affect movement cost and transit time:
 
-To guarantee that A* finds the mathematically optimal path, the heuristic must be **admissible**. An admissible heuristic never overestimates the true cost to reach the goal. If it overestimates, A* might settle for a sub-optimal path. If it underestimates (or is `0`, effectively turning A* into Dijkstra's Algorithm), it will explore unnecessary nodes, heavily impacting performance.
+| Zone Type    | Transit Time | A* Cost | Behavior                            |
+|-------------|-------------|---------|--------------------------------------|
+| `normal`    | 1 turn       | 1.0     | Standard movement                   |
+| `priority`  | 1 turn       | 0.8     | Cheaper — A* prefers these paths    |
+| `restricted`| 2 turns      | 2.0     | Slow — drone is "mid-transit" for 2 turns |
+| `blocked`   | —            | —       | Impassable — completely pruned       |
 
-**Space-Time Implementation:**
-In this project, the traditional A* algorithm is adapted into a **Cooperative Space-Time A***. The search state (`TemporalState`) expands across both physical locations and time (turns). Instead of just generating spatial neighbors, the algorithm generates space-time neighbors, checking a global `ReservationTable`. If a `(zone, turn)` or `(link, turn)` exceeds capacity (`max_drones` or `max_link_capacity`), it is treated as a dynamic obstacle. The search also allows "wait" actions, meaning a drone can physically stay still to avoid a collision while time advances.
+---
+
+### How the Heuristic Works
+
+A* uses the cost function `f(n) = g(n) + h(n)`:
+- **g(n)** — the actual accumulated cost from start to node `n`.
+- **h(n)** — the heuristic estimate from node `n` to the goal.
+
+For A* to find the optimal path, the heuristic must be **admissible** (never overestimates the true cost).
+
+This project uses **Manhattan Distance** as the heuristic:
+
+```
+h(n) = ( |x_current - x_goal| + |y_current - y_goal| ) × 0.25
+```
+
+**Why the `× 0.25` scaling factor?** Because `priority` zones cost only `0.8` per step. If the heuristic used raw Manhattan distance (cost `1.0` per step), it could overestimate the true cost through a chain of priority zones, making it **inadmissible**. Scaling down by `0.25` guarantees the heuristic never overestimates, at the cost of exploring a few extra nodes.
+
+---
 
 ### Generating Space-Time Neighbors
 
-The core engine of this adaptation is the `generate_valid_neighbors` function. In standard pathfinding, a "neighbor" is just a physically connected node. In **Space-Time pathfinding**, a "neighbor" is a combination of **Where you are going** and **When you will be there**. 
+The `generate_valid_neighbors()` method in `CooperativeAStar` is the core of the space-time adaptation. For every state it evaluates two types of moves:
 
-This function evaluates valid moves by breaking them down into two categories:
+1. **Wait Action** — the drone stays at its current zone while time advances by 1 turn. The `CollisionManager` checks that the zone still has capacity at `turn + 1`.
 
-1. **The "Wait" Action:** Sometimes the fastest path is currently blocked by another drone. Instead of moving away, the drone can wait. The function checks the `ReservationTable` to see if the current zone will still have capacity (i.e., not exceeding `max_drones`) during the `next_turn`. If it does, it generates a "Wait State" where the physical location remains the same, but the time (`turn`) advances by 1 and the cost increases by 1.0.
+2. **Move to Adjacent Zone** — for each physically connected neighbor:
+   - Check `is_traversable` (blocked zones are pruned).
+   - Calculate `transit_time` and `movement_cost` from the zone type.
+   - Check `CollisionManager` for **link capacity** during every turn of transit.
+   - Check `CollisionManager` for **zone capacity** at the arrival turn.
+   - If everything passes, create a new `TemporalState` with updated costs and a parent pointer.
 
-2. **Moving to Adjacent Zones:** The algorithm loops through every physically connected zone and evaluates it as a potential move:
-   - **Zone Types & Costs:** It checks the `zone_type` to calculate the arrival time (`next_turn`) and the A* penalty (`step_cost`). Normal zones take 1 turn (cost 1.0), Priority zones take 1 turn (cost 0.8), and Restricted zones take 2 entire turns to cross (cost 2.0). Blocked zones are completely pruned.
-   - **Collision Prevention:** Before committing, the `ReservationTable` must confirm that the **link** connecting the two zones is not fully occupied during transit, and that the **destination zone** has an open slot exactly on the turn of arrival.
-   - **State Creation:** If the path is clear, it calculates the new `g_cost` (total time elapsed) and `h_cost` (estimated time to goal), bundling it into a new `TemporalState` for the priority queue.
-
-
-The search algorithm must balance finding the shortest path with obeying strict map constraints. It uses a heuristic function to guide the search efficiently.
-
-**Manhattan Distance Heuristic:**
-Manhattan Distance (or Taxicab geometry) is the distance between two points measured along axes at right angles. Unlike Euclidean distance (the "as the crow flies" straight line), Manhattan distance calculates the sum of the absolute differences of their Cartesian coordinates. On a grid-like map where diagonal movement is impossible, Manhattan distance provides a highly accurate estimate of the minimum steps required.
-
-**Code-Specific Detail (The Final Formula):** 
-Because passing through a `priority` zone costs `0.8` (instead of `1.0`), an unscaled Manhattan distance could technically overestimate the true cost to the goal if a path uses priority zones, making the heuristic inadmissible. To guarantee A* always finds the mathematically optimal path without violating admissibility, the raw Manhattan distance is artificially scaled down by a factor of `0.25`.
-
-The **FINAL formula** calculated inside `_calculate_h` is:
-```python
-h(n) = ( |x_current - x_goal| + |y_current - y_goal| ) * 0.25
-```
-- **Normal zones** cost 1.0 turn to traverse.
-- **Priority zones** cost 0.8 turns (with a structural +1 turn advancement). This lower accumulation cost naturally pulls the A* search toward these zones when breaking ties.
-- **Restricted zones** cost 2 turns to cross. In the space-time graph, this is represented as an in-transit state across turns (e.g., reserving the zone for `Turn T` and `Turn T+1`).
-- **Blocked zones** are treated as static obstacles and are completely pruned from the search tree.
-- **Wait actions** (costing 1 turn) are injected as valid neighbors in the A* expansion, allowing a drone to stall at its current zone if the path ahead is blocked, provided its current zone still has capacity at `Turn T+1`.
+---
 
 ### Priority Queue (heapq)
 
-The algorithm leverages Python's `heapq` module to maintain an efficient priority queue (min-heap) for the A* `open_set`.
-- **Always Picking the Best Path:** A* must constantly evaluate the most promising path first—the state with the lowest total estimated cost (`f_cost`).
-- **Performance:** Searching a standard list to find the minimum cost node takes **O(N)** time, which would bottleneck the algorithm on large maps. `heapq` automatically keeps the best node at the front. `heappop()` grabs the lowest `f_cost` instantly, and `heappush()` sorts new nodes in **O(log N)** time, keeping the algorithm extremely fast.
-- **Dataclass Integration:** The `TemporalState` dataclass explicitly places `f_cost` as its first attribute and uses `@dataclass(order=True)`. This allows `heapq` to automatically compare and mathematically organize the states inside the heap without any custom sorting functions.
+The algorithm uses Python's `heapq` module (min-heap) for the open set.
+
+- `heappop()` always returns the state with the lowest `f_cost` — **O(log N)**.
+- `heappush()` inserts a new state — **O(log N)**.
+- The `TemporalState` dataclass has `f_cost` as its first field and uses `@dataclass(order=True)`, so `heapq` can compare states directly without custom sort functions.
 
 ### Complexity
 
-Let `S` be the number of explored space-time states for a drone.
+Let `S` be the number of explored space-time states for a single drone.
 
-- Route planning is approximately `O(S log S)` because the implementation uses a heap-based A* open set.
-- Neighbor generation is proportional to the degree of the current zone.
-- Reservation lookups are `O(1)` on average thanks to dictionaries.
+- Route planning per drone: **O(S log S)** (heap-based A*).
+- Neighbor generation: proportional to the degree of the current zone.
+- Reservation lookups: **O(1)** average (dictionary-based).
+- Total: scales linearly with the number of drones, since each drone is planned sequentially.
 
-For the full simulation, the cost scales with the number of drones because a route is planned for each drone.
+### Caching and Recalculation
 
-### Caching and recalculation
+Routes are **not** globally cached between drones. Each drone gets a freshly planned path, and the `CollisionManager` accumulates the reservations from all previously planned drones. This avoids the complexity of invalidating a shared cache when later drones change the available space-time slots.
 
-Routes are not globally cached and reused between drones. Instead, each drone gets one planned path, and the reservation table caches the occupied turns and links for the already planned drones. This keeps the implementation simple and avoids invalidating a large shared cache when later drones change the available space-time slots.
+### Memory Usage
 
-### Memory usage
+Memory is mainly driven by:
 
-Memory use is mainly driven by:
-
-- the parsed graph structure,
-- the reservation table,
-- the open set and visited states during A*,
+- the parsed graph structure (`Network`),
+- the `CollisionManager` reservation table (grows with scheduled zone-turn and link-turn entries, not with every possible turn),
+- the A* open set and visited states during planning,
 - one stored path per drone.
 
-In practice, the reservation table grows with the number of scheduled zone-turn and link-turn usages, not with every possible turn in the map.
+### Advantages and Disadvantages
+
+**Advantages:**
+
+- **Simple to implement** — the algorithm is a straightforward extension of single-agent A* with a shared reservation table. No complex conflict resolution logic is needed.
+- **Fast in practice** — each drone runs a standard A* search, and reservation lookups are O(1). On maps with enough capacity, all drones find paths quickly.
+- **Deterministic** — the same input always produces the same output, making debugging and testing straightforward.
+- **Scalable for well-connected maps** — when the graph has multiple disjoint paths, drones naturally spread across them because earlier drones reserve the fastest routes, pushing later drones to alternatives.
+
+**Disadvantages:**
+
+- **Greedy sequential ordering** — the first drone planned always gets the globally optimal path. Every subsequent drone works with a more constrained reservation table. This means later drones may get significantly worse paths, even when a globally better solution exists where all drones share the cost more evenly. The total turn count depends heavily on the planning order.
+- **No global optimality** — because drones are planned one at a time, the algorithm cannot guarantee a globally optimal solution. For example, the first drone might occupy a chokepoint for 3 turns when rerouting it by 1 extra turn would free the chokepoint for 5 other drones, saving turns overall.
+- **Conflict-Based Search (CBS) addresses this** — CBS is an alternative MAPF algorithm that plans all agents simultaneously. Instead of sequential planning, CBS detects conflicts between agents and splits the search into branches where each branch resolves a specific conflict. This produces globally optimal solutions but at a higher computational cost (exponential in the worst case). For this project, Cooperative A* was chosen for its simplicity and good-enough performance on the provided maps.
+- **Order-dependent results** — shuffling the drone planning order can produce different total turn counts. A potential improvement would be to try multiple orderings and pick the best result, or to use priority-based ordering (e.g., plan drones with the longest shortest-path first).
+
+---
 
 ## Simulation Output
 
-The engine prints one line per turn when drones move.
-
-Example output:
+The engine (or console renderer) prints one line per turn when drones move:
 
 ```text
 D1-a D2-b
@@ -227,43 +420,50 @@ D1-b
 D1-goal
 ```
 
-**In-Transit Output:** Notice the `D1-a-b` output. When a drone travels through a `restricted` zone (which takes 2 turns), it is considered "mid-transit." The engine dynamically formats its location as `current_zone-next_zone` to visually indicate that it is crossing between two points over multiple turns.
+**In-Transit Output:** Notice `D1-a-b` — when a drone travels through a `restricted` zone (2 turns), it is shown as `current_zone-next_zone` to indicate it is mid-transit between two points.
 
-When the visualizer is enabled, the same turn log is still printed in the terminal.
+When the Pygame visualizer is enabled, the same turn log is still printed to the terminal.
+
+---
 
 ## Visual Representation
 
-The optional visualizer opens a live Pygame window that brings the simulation to life. 
+The optional Pygame visualizer opens a live window that brings the simulation to life.
 
-### Key Features and Renderer Logic
+**Key features:**
 
-- **Connection Overlap Prevention:** To avoid drawing parallel connections perfectly on top of each other, the renderer mathematically offsets nodes using a "chessboard-like" coordinate shift (`px += 30 if y % 2 == 0 else -10`). This guarantees all edges remain visible.
-- **Node Data & Identifiers:** 
-  - The exact `x,y` coordinates of each node are printed directly underneath it.
-  - A descriptive letter (`Start`, `End`, `R` for restricted, `B` for blocked, `P` for priority) is stamped in the absolute center of the node circle for quick identification.
-- **Animated Drone Motion:** The renderer now interpolates drone positions between turns at 60 FPS, so movement looks smooth instead of jumping from one node to the next.
-- **Drone State Visualization:**
-  - **In Node:** When a drone is resting or acting inside a zone, its marker is drawn hovering slightly above the node (`py - 25`), wrapped in a bright red rectangle.
-  - **In Transit:** When a drone is moving between two zones, its position is animated along the segment and rendered in gray while the move is in progress.
-- **Drone Graphics:** Each marker uses a custom loaded image bitmap (`imgs/drone.bmp`), scaled to 45x45 pixels and layered underneath dynamically grouped text labels (e.g. `2D` if two drones occupy the same spot).
-- **Interactive Scrubbing & Playback:** You can pause the simulation at any time using `Space`, physically scrub time forward and backward using the `Left` and `Right` arrow keys, or instantly reset back to the beginning using the `R` key.
-- **Heads-Up Display (HUD):** A dedicated panel at the bottom of the screen displays real-time analytics, including the total number of drones, average turns per drone, total path cost, and exactly how many drones are actively moving at the current moment in time.
-- **Responsive Window Loop:** The visualizer handles interaction events on every frame so the animation stays completely smooth while playing at custom speeds configured by `--speed`.
+- **Animated drone motion** — positions are interpolated between turns at 60 FPS using smooth-step easing, so drones glide instead of jumping.
+- **Node display** — each zone is drawn as a colored circle showing its x,y coordinates, capacity number, and a type abbreviation (`Start`, `End`, `R`, `P`, `B`).
+- **Connection rendering** — edges are drawn with a link capacity label at the midpoint. A chessboard-like coordinate offset prevents overlapping parallel connections.
+- **Drone markers** — in-node drones get a red label; in-transit drones get a gray label. When multiple drones overlap, the label shows the count (e.g., `2D`).
+- **Heads-Up Display (HUD)** — a bottom panel shows: total drones, active (moving) drones, average turns per drone, and total path cost.
+- **Interactive controls:**
 
-### Advantages
+| Key              | Action        |
+|------------------|---------------|
+| `Space`          | Play / Pause  |
+| `Left` / `Right` | Scrub time    |
+| `R`              | Reset to start|
+| `Esc`            | Quit          |
 
-This level of visual feedback improves understanding in three main ways:
-- It makes congestion visible immediately when several drones compete for the same area.
-- It shows where restricted zones delay movement and how transit spans multiple turns through the gray midpoint markers.
-- It makes it easier to visually explain why a pathing algorithm's solution is valid or why a specific bottleneck appears.
+**Limitations:** The window size is calculated from the map's coordinate extremes using a fixed tile size. Very large maps may overflow the screen since there is no zooming or panning.
 
-The animated renderer also makes short moves easier to follow, since each drone eases into and out of a turn instead of snapping instantly to the next location.
+---
 
-The visualizer also supports pause and resume with the `Space` bar, resetting with `R`, and quitting with `Escape` or the window close button.
+## Useful Commands
 
-### Disadvantages
+```bash
+make install       # Sync dependencies with uv
+make run           # Run with auto-generated test map
+make debug         # Run with Python's pdb debugger
+make lint          # flake8 + mypy type checking
+make lint-strict   # Strict mypy mode
+make clean         # Remove venv, caches, and temp files
+make clean-cache   # Remove caches and temp files only
+make help          # Show all available targets
+```
 
-- **Static Window Scaling:** The visualizer's window dimensions are calculated directly from the map's coordinate extremes using a fixed tile size. As a result, very large maps or maps with widely spaced nodes (such as the Challenger maps) can generate a window that exceeds standard screen resolutions. Since there is no dynamic zooming, panning, or responsive scaling implemented, parts of these massive grids may overflow off-screen and become impossible to view completely.
+---
 
 ## Resources
 
@@ -272,11 +472,12 @@ The visualizer also supports pause and resume with the `Space` bar, resetting wi
 - Pygame documentation: https://www.pygame.org/docs/
 - A* search overview: https://www.datacamp.com/tutorial/a-star-algorithm
 - Cooperative A*:
-`David Silver. 2005. Cooperative pathfinding. In Proceedings of the First AAAI Conference on Artificial Intelligence and Interactive Digital Entertainment (AIIDE'05). AAAI Press, 117–122.
-`
+`David Silver. 2005. Cooperative pathfinding. In Proceedings of the First AAAI Conference on Artificial Intelligence and Interactive Digital Entertainment (AIIDE'05). AAAI Press, 117–122.`
 - 42 project subject and map files included in this repository
 
-### AI Usage
+---
+
+## AI Usage
 
 AI assistance was utilized during the development of this project for the following tasks:
 - **Algorithm Comprehension:** AI helped me better understand the algorithm, especially the space-time pathfinding part.
@@ -284,15 +485,3 @@ AI assistance was utilized during the development of this project for the follow
 - **Documentation & Testing:** Helping structure and proofread this `README.md` to ensure it meets all curriculum requirements, and generating PEP 257 compliant docstrings for classes and methods across the codebase.
 
 The core logical design, algorithmic choices, and constraints enforcement were driven by the developer, with AI acting as a supportive peer-programming tool.
-
-## Useful Commands
-
-```bash
-make debug # runs the simulator with Python's pdb debugger
-make lint # flake8 and mypy type hint checking
-make lint-strict # strict version of mypy checker
-make clean # cleans the python caches and removes the virtual environment
-make help # displays all available commands
-```
-
-These are helpful for checking the codebase and removing generated Python cache files.

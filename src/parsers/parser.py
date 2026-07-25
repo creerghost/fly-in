@@ -1,6 +1,7 @@
 """Parser module for reading and validating map configuration files."""
 
 from typing import List, Dict, Any, Tuple
+from pydantic import ValidationError
 from ..models import Network
 from ..models.zone import Zone
 from ..models.connection import Connection
@@ -64,11 +65,17 @@ class Parser:
     def _parse_line(self, line: str, line_num: int) -> None:
         """Parse an individual line from the configuration file."""
         if line.startswith("nb_drones"):
+            if self.nb_drones:
+                raise ValueError(f"Line {line_num}: "
+                                 f"nb_drones already defined")
             drones = line.split(":")
             if len(drones) != 2 or not drones[1].strip().isdigit():
                 raise ValueError(f"Line {line_num}: "
                                  f"Invalid nb_drones format")
             self.nb_drones = int(drones[1].strip())
+            if self.nb_drones <= 0:
+                raise ValueError(f"Line {line_num}: "
+                                 f"nb_drones must be positive")
         elif line.startswith("start_hub:"):
             self._start_hub_count += 1
             self._start_hub = self._parse_zone_line(
@@ -141,7 +148,10 @@ class Parser:
         }
         zone_data.update(meta_data)
 
-        return Zone(**zone_data)
+        try:
+            return Zone(**zone_data)
+        except ValidationError as e:
+            raise ValueError(f"Invalid zone metadata: {e}")
 
     def _parse_connection_line(self, line: str) -> Connection:
         """Extract edge data and link capacity from a connection string."""
@@ -163,4 +173,7 @@ class Parser:
         }
         conn_data.update(meta_data)
 
-        return Connection(**conn_data)
+        try:
+            return Connection(**conn_data)
+        except ValidationError as e:
+            raise ValueError(f"Invalid connection metadata: {e}")

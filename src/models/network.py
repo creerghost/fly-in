@@ -1,5 +1,6 @@
 """Network topology and graph representations."""
 
+import sys
 from typing import List, Dict, Tuple, Set, Any
 from typing_extensions import Self
 from pydantic import BaseModel, Field, model_validator
@@ -74,8 +75,8 @@ class Network(BaseModel):
 
         Stores them for quick lookup and builds adjacency lists.
         """
-        self.start_hub.max_drones = self.nb_drones
-        self.end_hub.max_drones = self.nb_drones
+        self.start_hub.max_drones = sys.maxsize
+        self.end_hub.max_drones = sys.maxsize
 
         self.zones[self.start_hub.name] = self.start_hub
         if self.hubs:
