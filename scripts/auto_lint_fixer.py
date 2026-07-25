@@ -64,8 +64,6 @@ Output ONLY the raw valid Python code without any markdown formatting, backticks
         
     with open(file_path, "w") as f:
         f.write(fixed_code)
-        if not fixed_code.endswith("\n"):
-            f.write("\n")
     print(f"Successfully applied fixes to {file_path}")
 
 def main():
