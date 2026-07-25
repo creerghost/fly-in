@@ -4,11 +4,11 @@ import os
 import sys
 import math
 import pygame
-from ..models import Network, Drone
-from ..interfaces import Renderer
+from ...models import Network, Drone
+from ...interfaces import Renderer
 from typing import List, Tuple, Optional, Dict
 from .colors import Colors
-from .hud_stats import HudStats
+from ..hud_stats import HudStats
 
 
 class PygameRenderer(Renderer):
@@ -269,8 +269,9 @@ class PygameRenderer(Renderer):
                 (px - cords.get_width() // 2,
                  py - cords.get_height() // 2 - 30))
 
-            cap = self.font.render(
-                f"{zone.max_drones}", True, Colors.BLACK.value)
+            cap_text = ("inf" if zone.max_drones == sys.maxsize
+                        else f"{zone.max_drones}")
+            cap = self.font.render(cap_text, True, Colors.BLACK.value)
             self.screen.blit(
                 cap,
                 (px - cap.get_width() // 2,

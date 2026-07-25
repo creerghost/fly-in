@@ -4,6 +4,7 @@ from ..parsers import Parser, ArgParser
 from ..algorithm.factory import PathfinderFactory
 from ..interfaces import Pathfinder, Engine, Renderer
 from ..engine import SimulationEngine
+from ..renderer import RendererFactory
 import sys
 
 
@@ -27,12 +28,9 @@ class Application():
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
 
-            if not visual:
-                from ..renderer import ConsoleRenderer
-                renderer: Renderer = ConsoleRenderer()
-            else:
-                from ..renderer import PygameRenderer
-                renderer = PygameRenderer(network, args.speed)
+            renderer: Renderer = RendererFactory.create(
+                visual, network, args.speed
+            )
 
             renderer.run(engine.drones)
 

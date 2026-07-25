@@ -1,12 +1,12 @@
 """Factory for creating pathfinding algorithms."""
 
 from ..models import Network
-from ..interfaces import Pathfinder
+from ..interfaces import Pathfinder, Factory
 from .coop_a_star.algorithm import CooperativeAStar
 from .coop_a_star.manager import CollisionManager
 
 
-class PathfinderFactory:
+class PathfinderFactory(Factory):
     """Factory class for instantiating pathfinders."""
 
     @staticmethod
