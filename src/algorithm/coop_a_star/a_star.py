@@ -36,13 +36,11 @@ class AStarAlgorithm(Pathfinder):
         """
         pass
 
-    @abstractmethod
     def get_state_key(self, state: TemporalState) -> Tuple[str, int] | str:
         """
-        Define what makes a state unique in the visited set.
-        Must be implemented by subclasses.
+        Space-Time A* uses both zone_name and turn as the state key.
         """
-        pass
+        return (state.zone_name, state.turn)
 
     @abstractmethod
     def on_path_found(self, path: List[Tuple[str, int]]) -> None:

@@ -48,11 +48,18 @@ Please provide the completely fixed code for `{file_path}`.
 Output ONLY the raw valid Python code without any markdown formatting, backticks, or explanations. Do not include ```python or ``` at the end. Just the code.
 """
 
+    from google.genai import errors
+
     print(f"Asking Gemini to fix {file_path}...")
-    response = client.models.generate_content(
-        model='gemini-3.6-flash',
-        contents=prompt,
-    )
+    try:
+        response = client.models.generate_content(
+            model='gemini-3.6-flash',
+            contents=prompt,
+        )
+    except errors.APIError as e:
+        print(f"Error communicating with the Gemini API: {e}")
+        print("This is likely a temporary issue due to high demand. Please try re-running the CI job in a few minutes.")
+        sys.exit(1)
     
     fixed_code = response.text
     # Cleanup in case the model ignored instructions and included markdown

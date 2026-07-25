@@ -18,12 +18,6 @@ class CooperativeAStar(AStarAlgorithm):
         super().__init__(network)
         self.reservations = reservations
 
-    def get_state_key(self, state: TemporalState) -> Tuple[str, int] | str:
-        """
-        Space-Time A* uses both zone_name and turn as the state key.
-        """
-        return (state.zone_name, state.turn)
-
     def on_path_found(self, path: List[Tuple[str, int]]) -> None:
         """
         Register the finalized path in the collision manager.
