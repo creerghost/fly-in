@@ -23,6 +23,8 @@ ARGS    ?= --visual
 install:
 	@printf "$(CYAN)Syncing dependencies with uv...$(RESET)\n"
 	$(UV) sync
+	@printf "$(CYAN)Installing frontend dependencies...$(RESET)\n"
+	npm install --prefix src/renderer/web/frontend
 
 gen_map:
 	@printf "Creating temporary test map...\n"
@@ -65,6 +67,8 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -exec rm -f {} +
 	rm -f tmp_map.txt
+	@printf "$(YELLOW)Cleaning frontend dependencies...$(RESET)\n"
+	rm -rf src/renderer/web/frontend/node_modules
 	@printf "$(GREEN)Done!$(RESET)\n"
 
 clean-cache:
