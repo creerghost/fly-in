@@ -15,8 +15,9 @@ class CollisionManager(Manager):
     def __init__(self) -> None:
         """Initialize empty schedules for zones and links."""
         self.zone_schedule: dict[tuple[str, int], int] = defaultdict(int)
-        self.link_schedule: dict[tuple[tuple[str, str],
-                                       int], int] = defaultdict(int)
+        self.link_schedule: dict[
+            tuple[tuple[str, str], int], int
+        ] = defaultdict(int)
 
     @staticmethod
     def _normalize_link(zone1: str, zone2: str) -> tuple[str, str]:
@@ -27,7 +28,9 @@ class CollisionManager(Manager):
         """
         return (min(zone1, zone2), max(zone1, zone2))
 
-    def is_zone_available(self, zone_name: str, turn: int, max_capacity: int) -> bool:
+    def is_zone_available(
+        self, zone_name: str, turn: int, max_capacity: int
+    ) -> bool:
         """Check if a specific zone has remaining capacity for a given turn."""
         return self.zone_schedule[(zone_name, turn)] < max_capacity
 

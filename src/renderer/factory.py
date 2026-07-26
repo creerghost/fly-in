@@ -12,7 +12,9 @@ class RendererFactory(Factory):
     def create(
         visual: bool, network: Network, speed: float = 1.0
     ) -> list[Renderer]:
-        """Create a list of renderer instances based on command line arguments."""
+        """Create a list of renderer instances based on command line
+        arguments.
+        """
         from .cli_logger import CLILogger
 
         renderers: list[Renderer] = [CLILogger()]

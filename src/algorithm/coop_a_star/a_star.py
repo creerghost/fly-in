@@ -20,14 +20,9 @@ class AStarAlgorithm(Pathfinder):
 
         This maintains admissibility.
         """
-        return (
-            float(
-                abs(self.network[current_zone].x - self.network[target_zone].x)
-                + abs(self.network[current_zone].y -
-                      self.network[target_zone].y)
-            )
-            * 0.25
-        )
+        dx = abs(self.network[current_zone].x - self.network[target_zone].x)
+        dy = abs(self.network[current_zone].y - self.network[target_zone].y)
+        return float(dx + dy) * 0.25
 
     @abstractmethod
     def generate_valid_neighbors(
@@ -86,7 +81,9 @@ class AStarAlgorithm(Pathfinder):
                 continue
             visited.add(state_key)
 
-            for neighbor in self.generate_valid_neighbors(current_state, end_zone):
+            for neighbor in self.generate_valid_neighbors(
+                current_state, end_zone
+            ):
                 neighbor_key = self.get_state_key(neighbor)
                 if neighbor_key not in visited:
                     heappush(heap, neighbor)

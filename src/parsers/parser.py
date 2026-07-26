@@ -38,7 +38,8 @@ class Parser:
                         continue
                     if not line.startswith("nb_drones") and not self.nb_drones:
                         raise ValueError(
-                            f"Line {l_num}: nb_drones must be defined before any zones"
+                            f"Line {l_num}: nb_drones must be "
+                            "defined before any zones"
                         )
                     self._parse_line(line, l_num)
             # self._validate()
@@ -68,7 +69,9 @@ class Parser:
         """Parse an individual line from the configuration file."""
         if line.startswith("nb_drones"):
             if self.nb_drones:
-                raise ValueError(f"Line {line_num}: nb_drones already defined")
+                raise ValueError(
+                    f"Line {line_num}: nb_drones already defined"
+                )
             drones = line.split(":")
             if len(drones) != 2 or not drones[1].strip().isdigit():
                 raise ValueError(f"Line {line_num}: Invalid nb_drones format")
@@ -98,7 +101,10 @@ class Parser:
             if self._end_hub:
                 defined_zones.add(self._end_hub.name)
 
-            if conn.name1 not in defined_zones or conn.name2 not in defined_zones:
+            if (
+                conn.name1 not in defined_zones
+                or conn.name2 not in defined_zones
+            ):
                 raise ValueError("Connection links to undefined zone")
 
             self._connections.append(conn)
@@ -110,7 +116,11 @@ class Parser:
     def _parse_metadata(line: str) -> tuple[str, dict[str, str]]:
         """Extract metadata tags from brackets inside a line string."""
         if "[" in line or "]" in line:
-            if line.count("[") != 1 or line.count("]") != 1 or not line.endswith("]"):
+            if (
+                line.count("[") != 1
+                or line.count("]") != 1
+                or not line.endswith("]")
+            ):
                 raise ValueError("Invalid metadata block syntax")
 
         parts = line.split("[")

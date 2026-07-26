@@ -45,14 +45,20 @@ class PygameRenderer(Renderer):
         # Fonts
         self.font = pygame.font.SysFont(None, self.config.font_size_normal)
         self.large_font = pygame.font.SysFont(
-            None, self.config.font_size_large)
+            None, self.config.font_size_large
+        )
         self.small_font = pygame.font.SysFont(
-            None, self.config.font_size_small)
+            None, self.config.font_size_small
+        )
         self.hud_font = pygame.font.SysFont(None, self.config.font_size_hud)
 
         # Drawers
         self.network_drawer = NetworkDrawer(
-            self.screen, self.config, self.font, self.small_font, self._get_pixel_coords
+            self.screen,
+            self.config,
+            self.font,
+            self.small_font,
+            self._get_pixel_coords,
         )
         self.drone_drawer = DroneDrawer(
             self.screen, self.config, self.font, self._get_pixel_coords
@@ -97,8 +103,9 @@ class PygameRenderer(Renderer):
         py = (grid_center_y - y) * self.config.tile_size + screen_center_y
 
         # chessboard offset to prevent connection overlaps
-        # For interpolation, we might need to cast to int if we want the exact offset,
-        # but using float coordinates should be fine since the original used round x/y.
+        # For interpolation, we might need to cast to int if we want the
+        # exact offset, but using float coordinates should be fine since the
+        # original used round x/y.
         px += 30 if round(y) % 2 == 0 else -10
         py += 30 if round(x) % 2 != 0 else -10
 
@@ -137,7 +144,9 @@ class PygameRenderer(Renderer):
 
         return commands
 
-    def render(self, current_time: float, max_turn: float, drones: list[Drone]) -> None:
+    def render(
+        self, current_time: float, max_turn: float, drones: list[Drone]
+    ) -> None:
         """
         Render the simulation frame.
         """

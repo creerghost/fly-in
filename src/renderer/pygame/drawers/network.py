@@ -89,7 +89,10 @@ class NetworkDrawer:
                 ),
             )
 
-            cap_text = "inf" if zone.max_drones == sys.maxsize else f"{zone.max_drones}"
+            if zone.max_drones == sys.maxsize:
+                cap_text = "inf"
+            else:
+                cap_text = f"{zone.max_drones}"
             cap = self.font.render(cap_text, True, Colors.BLACK.value)
             self.screen.blit(
                 cap, (px - cap.get_width() // 2,

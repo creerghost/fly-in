@@ -35,7 +35,9 @@ class HudStats:
         )
 
     @classmethod
-    def from_drones(cls, drones: list["Drone"], network: "Network") -> "HudStats":
+    def from_drones(
+        cls, drones: list["Drone"], network: "Network"
+    ) -> "HudStats":
         """Compute all static HUD statistics based on planned drone paths."""
         total_cost_stats: int = 0
         total_drones = len(drones)
