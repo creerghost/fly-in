@@ -1,8 +1,7 @@
 """Drone models and status enumeration."""
 
-from typing import List, Tuple
-from enum import Enum
 from dataclasses import dataclass, field
+from enum import Enum
 
 
 class DroneStatus(str, Enum):
@@ -23,11 +22,11 @@ class Drone:
 
     id: str
     current_location: str
-    path: List[Tuple[str, int]] = field(default_factory=list)
+    path: list[tuple[str, int]] = field(default_factory=list)
     status: DroneStatus = field(default=DroneStatus.WAITING)
-    _draw_pos: Tuple[float, float] = field(default=(0.0, 0.0))
-    _prev_pos: Tuple[float, float] = field(default=(0.0, 0.0))
-    _next_pos: Tuple[float, float] = field(default=(0.0, 0.0))
+    _draw_pos: tuple[float, float] = field(default=(0.0, 0.0))
+    _prev_pos: tuple[float, float] = field(default=(0.0, 0.0))
+    _next_pos: tuple[float, float] = field(default=(0.0, 0.0))
     _animation_ready: bool = field(default=False)
 
     def __str__(self) -> str:
@@ -36,11 +35,13 @@ class Drone:
 
     def __repr__(self) -> str:
         """Return a detailed string representation of the drone."""
-        return (f"Drone('{self.id}', loc='{self.current_location}', "
-                f"status='{self.status.name}')")
+        return (
+            f"Drone('{self.id}', loc='{self.current_location}', "
+            f"status='{self.status.name}')"
+        )
 
     @classmethod
-    def create_fleet(cls, count: int, start_location: str) -> List['Drone']:
+    def create_fleet(cls, count: int, start_location: str) -> list["Drone"]:
         """Generate a fleet of drones starting at the specified location."""
         return [cls(f"D{i + 1}", start_location) for i in range(count)]
 
@@ -59,3 +60,42 @@ class Drone:
                 else:
                     return f"{curr_zone}-{next_zone}"
         return self.path[-1][0]
+
+    def get_render_state(
+        self, t: float
+    ) -> tuple[str, str, float, bool]:
+        """
+        Determine the logical render state at time t.
+
+        Returns:
+            Tuple[str, str, float, bool]:
+            (start_zone_name, end_zone_name, progress_fraction, is_transit)
+        """
+        if not self.path:
+            return self.current_location, self.current_location, 0.0, False
+
+        if t >= self.path[-1][1]:
+            zone = self.path[-1][0]
+            return zone, zone, 0.0, False
+
+        if t <= self.path[0][1]:
+            zone = self.path[0][0]
+            return zone, zone, 0.0, False
+
+        for curr_step, next_step in zip(self.path[:-1], self.path[1:]):
+            curr_zone_name, curr_turn = curr_step
+            next_zone_name, next_turn = next_step
+
+            if curr_turn <= t < next_turn:
+                t_frac = (t - curr_turn) / (next_turn - curr_turn)
+                t_smooth = t_frac * t_frac * (3.0 - 2.0 * t_frac)
+
+                is_transit = (curr_zone_name != next_zone_name) and (
+                    0.05 < t_smooth < 0.95
+                )
+
+                return curr_zone_name, next_zone_name, t_smooth, is_transit
+
+        # fallback
+        zone = self.path[-1][0]
+        return zone, zone, 0.0, False

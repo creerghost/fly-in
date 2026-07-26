@@ -1,11 +1,11 @@
 """Space-time state models for A* pathfinding."""
 
-from typing import Optional
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass(order=True, slots=True)
-class TemporalState():
+class TemporalState:
     """
     Represent a node in the space-time A* search graph.
 
@@ -18,7 +18,7 @@ class TemporalState():
     h_cost: float = field(compare=False)
     turn: int = field(compare=False)
     zone_name: str = field(compare=False)
-    parent: Optional['TemporalState'] = field(default=None, compare=False)
+    parent: Optional["TemporalState"] = field(default=None, compare=False)
 
     def __str__(self) -> str:
         """Return a string representation of the state."""
@@ -26,5 +26,7 @@ class TemporalState():
 
     def __repr__(self) -> str:
         """Return a detailed string representation of the state."""
-        return (f"<TemporalState {self.zone_name} T={self.turn} "
-                f"f={self.f_cost} g={self.g_cost}>")
+        return (
+            f"<TemporalState {self.zone_name} T={self.turn} "
+            f"f={self.f_cost} g={self.g_cost}>"
+        )

@@ -1,9 +1,9 @@
 """Zone models representing nodes in the drone network."""
 
-from pydantic import BaseModel, ConfigDict, model_validator, Field
-from typing import Optional
-from typing_extensions import Self
 from enum import Enum
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing_extensions import Self
 
 
 class ZoneType(str, Enum):
@@ -15,7 +15,7 @@ class ZoneType(str, Enum):
     PRIORITY = "priority"
 
     @property
-    def display_label(self) -> Optional[str]:
+    def display_label(self) -> str | None:
         """Return a single-character label for the UI renderer."""
         if self == ZoneType.RESTRICTED:
             return "R"
@@ -34,7 +34,7 @@ class Zone(BaseModel):
     imposes certain constraints like max capacity and movement cost.
     """
 
-    model_config = ConfigDict(extra='forbid', populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     name: str
     x: int
@@ -51,8 +51,8 @@ class Zone(BaseModel):
         Dashes are reserved for parsing connection strings.
         """
         if "-" in self.name:
-            raise ValueError("Zone name should not contain dashes: "
-                             f"{self.name}")
+            raise ValueError(
+                f"Zone name should not contain dashes: {self.name}")
         return self
 
     @property

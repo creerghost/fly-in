@@ -1,6 +1,7 @@
 """Factory for creating renderer instances."""
 
-from ..interfaces import Renderer, Factory
+
+from ..interfaces import Factory, Renderer
 from ..models import Network
 
 
@@ -8,11 +9,17 @@ class RendererFactory(Factory):
     """Factory class for instantiating renderers."""
 
     @staticmethod
-    def create(visual: bool, network: Network, speed: float = 1.0) -> Renderer:
-        """Create a renderer instance based on command line arguments."""
-        if not visual:
-            from .console_renderer import ConsoleRenderer
-            return ConsoleRenderer()
-        else:
+    def create(
+        visual: bool, network: Network, speed: float = 1.0
+    ) -> list[Renderer]:
+        """Create a list of renderer instances based on command line arguments."""
+        from .cli_logger import CLILogger
+
+        renderers: list[Renderer] = [CLILogger()]
+
+        if visual:
             from .pygame import PygameRenderer
-            return PygameRenderer(network, speed)
+
+            renderers.append(PygameRenderer(network, speed))
+
+        return renderers

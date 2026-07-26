@@ -9,4 +9,3 @@ class Runnable(ABC):
     @abstractmethod
     def run(self) -> None:
         """Execute the component."""
-        pass

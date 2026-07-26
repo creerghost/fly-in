@@ -1,11 +1,13 @@
 """Network topology and graph representations."""
 
 import sys
-from typing import List, Dict, Tuple, Set, Any
-from typing_extensions import Self
+from typing import Any
+
 from pydantic import BaseModel, Field, model_validator
-from .zone import Zone
+from typing_extensions import Self
+
 from .connection import Connection
+from .zone import Zone
 
 
 class Network(BaseModel):
@@ -18,22 +20,22 @@ class Network(BaseModel):
     nb_drones: int = Field(gt=0)
     start_hub: Zone
     end_hub: Zone
-    hubs: List[Zone] | None = Field(default=None)
-    connections: List[Connection] = Field(..., min_length=1)
+    hubs: list[Zone] | None = Field(default=None)
+    connections: list[Connection] = Field(..., min_length=1)
 
-    zones: Dict[str, Zone] = Field(default_factory=dict, init=False)
-    neighboring_zones: Dict[str, List[Tuple[Zone, Connection]]] = Field(
+    zones: dict[str, Zone] = Field(default_factory=dict, init=False)
+    neighboring_zones: dict[str, list[tuple[Zone, Connection]]] = Field(
         default_factory=dict, init=False
     )
 
     @model_validator(mode="after")
     def check_duplicate_zones(self) -> Self:
         """Validate that all zone names and coordinates are strictly unique."""
-        zones: List[Zone] = [self.start_hub, self.end_hub]
+        zones: list[Zone] = [self.start_hub, self.end_hub]
         if self.hubs:
             zones.extend(self.hubs)
-        seen_names: Set[str] = set()
-        seen_zones: Set[Tuple[int, int]] = set()
+        seen_names: set[str] = set()
+        seen_zones: set[tuple[int, int]] = set()
         for zone in zones:
             if zone.name in seen_names:
                 raise ValueError("Zone name already exists")
@@ -50,23 +52,24 @@ class Network(BaseModel):
 
         Also checks that no duplicate connections exist.
         """
-        zones: List[str] = [self.start_hub.name, self.end_hub.name]
+        zones: list[str] = [self.start_hub.name, self.end_hub.name]
         if self.hubs:
             zones.extend([h.name for h in self.hubs])
-        seen_cons: Set[Tuple[str, str]] = set()
+        seen_cons: set[tuple[str, str]] = set()
         for con in self.connections:
             s = sorted((con.name1, con.name2))
-            pair: Tuple[str, str] = (s[0], s[1])
+            pair: tuple[str, str] = (s[0], s[1])
             if pair in seen_cons:
-                raise ValueError(f"Connection already exists: "
-                                 f"{con.name1}-{con.name2}")
+                raise ValueError(
+                    f"Connection already exists: {con.name1}-{con.name2}")
             seen_cons.add(pair)
             if con.name1 not in zones or con.name2 not in zones:
-                raise ValueError(f"Connection to non-existent zone: "
-                                 f"{con.name1}-{con.name2}")
+                raise ValueError(
+                    f"Connection to non-existent zone: {con.name1}-{con.name2}"
+                )
             if con.name1 == con.name2:
-                raise ValueError(f"Connection to same zone: "
-                                 f"{con.name1}-{con.name2}")
+                raise ValueError(
+                    f"Connection to same zone: {con.name1}-{con.name2}")
         return self
 
     def model_post_init(self, __context: Any) -> None:
@@ -107,6 +110,8 @@ class Network(BaseModel):
 
     def __str__(self) -> str:
         """Return a string representation of the network topology."""
-        return (f"Network({len(self.zones)} zones, "
-                f"{len(self.connections)} connections, "
-                f"{self.nb_drones} drones)")
+        return (
+            f"Network({len(self.zones)} zones, "
+            f"{len(self.connections)} connections, "
+            f"{self.nb_drones} drones)"
+        )

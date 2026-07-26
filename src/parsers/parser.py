@@ -1,10 +1,12 @@
 """Parser module for reading and validating map configuration files."""
 
-from typing import List, Dict, Any, Tuple
+from typing import Any
+
 from pydantic import ValidationError
+
 from ..models import Network
-from ..models.zone import Zone
 from ..models.connection import Connection
+from ..models.zone import Zone
 
 
 class Parser:
@@ -17,8 +19,8 @@ class Parser:
         self.nb_drones: int = 0
         self._start_hub: Zone | None = None
         self._end_hub: Zone | None = None
-        self._hubs: List[Zone] = []
-        self._connections: List[Connection] = []
+        self._hubs: list[Zone] = []
+        self._connections: list[Connection] = []
         self._start_hub_count = 0
         self._end_hub_count = 0
 
@@ -29,15 +31,15 @@ class Parser:
         Returns a fully constructed Network domain object.
         """
         try:
-            with open(self.filepath, 'r') as f:
+            with open(self.filepath, "r") as f:
                 for l_num, line in enumerate(f, start=1):
                     line = line.strip()
-                    if not line or line.startswith('#'):
+                    if not line or line.startswith("#"):
                         continue
                     if not line.startswith("nb_drones") and not self.nb_drones:
-                        raise ValueError(f"Line {l_num}: "
-                                         f"nb_drones must be defined "
-                                         f"before any zones")
+                        raise ValueError(
+                            f"Line {l_num}: nb_drones must be defined before any zones"
+                        )
                     self._parse_line(line, l_num)
             # self._validate()
             if self._start_hub_count != 1:
@@ -59,34 +61,32 @@ class Parser:
             start_hub=self._start_hub,
             end_hub=self._end_hub,
             hubs=self._hubs if self._hubs else None,
-            connections=self._connections
+            connections=self._connections,
         )
 
     def _parse_line(self, line: str, line_num: int) -> None:
         """Parse an individual line from the configuration file."""
         if line.startswith("nb_drones"):
             if self.nb_drones:
-                raise ValueError(f"Line {line_num}: "
-                                 f"nb_drones already defined")
+                raise ValueError(f"Line {line_num}: nb_drones already defined")
             drones = line.split(":")
             if len(drones) != 2 or not drones[1].strip().isdigit():
-                raise ValueError(f"Line {line_num}: "
-                                 f"Invalid nb_drones format")
+                raise ValueError(f"Line {line_num}: Invalid nb_drones format")
             self.nb_drones = int(drones[1].strip())
             if self.nb_drones <= 0:
-                raise ValueError(f"Line {line_num}: "
-                                 f"nb_drones must be positive")
+                raise ValueError(
+                    f"Line {line_num}: nb_drones must be positive")
         elif line.startswith("start_hub:"):
             self._start_hub_count += 1
             self._start_hub = self._parse_zone_line(
-                line.replace("start_hub:", "").strip())
+                line.replace("start_hub:", "").strip()
+            )
         elif line.startswith("end_hub:"):
             self._end_hub_count += 1
             self._end_hub = self._parse_zone_line(
                 line.replace("end_hub:", "").strip())
         elif line.startswith("hub:"):
-            hub = self._parse_zone_line(
-                line.replace("hub:", "").strip())
+            hub = self._parse_zone_line(line.replace("hub:", "").strip())
             self._hubs.append(hub)
         elif line.startswith("connection:"):
             conn = self._parse_connection_line(
@@ -98,27 +98,24 @@ class Parser:
             if self._end_hub:
                 defined_zones.add(self._end_hub.name)
 
-            if (conn.name1 not in defined_zones or
-                    conn.name2 not in defined_zones):
+            if conn.name1 not in defined_zones or conn.name2 not in defined_zones:
                 raise ValueError("Connection links to undefined zone")
 
             self._connections.append(conn)
         else:
-            raise ValueError(f"Line {line_num}: "
-                             f"Unknown syntax on line '{line}'")
+            raise ValueError(
+                f"Line {line_num}: Unknown syntax on line '{line}'")
 
     @staticmethod
-    def _parse_metadata(line: str) -> Tuple[str, Dict[str, str]]:
+    def _parse_metadata(line: str) -> tuple[str, dict[str, str]]:
         """Extract metadata tags from brackets inside a line string."""
         if "[" in line or "]" in line:
-            if (line.count("[") != 1 or
-                    line.count("]") != 1 or
-                    not line.endswith("]")):
+            if line.count("[") != 1 or line.count("]") != 1 or not line.endswith("]"):
                 raise ValueError("Invalid metadata block syntax")
 
         parts = line.split("[")
         base_info = parts[0].strip()
-        data: Dict[str, str] = {}
+        data: dict[str, str] = {}
 
         if len(parts) > 1:
             meta_str = parts[1].replace("]", "").strip()
@@ -127,8 +124,7 @@ class Parser:
             meta_items = meta_str.split()
             for item in meta_items:
                 if "=" not in item or item.count("=") != 1:
-                    raise ValueError(f"Invalid metadata item syntax: "
-                                     f"'{item}'")
+                    raise ValueError(f"Invalid metadata item syntax: '{item}'")
                 k, v = item.split("=")
                 data[k.strip()] = v.strip()
         return base_info, data
@@ -141,7 +137,7 @@ class Parser:
         if len(base_info) != 3:
             raise ValueError("Invalid syntax for zone line")
 
-        zone_data: Dict[str, Any] = {
+        zone_data: dict[str, Any] = {
             "name": base_info[0],
             "x": base_info[1],
             "y": base_info[2],
@@ -167,7 +163,7 @@ class Parser:
         if not z1 or not z2:
             raise ValueError("Connection zone names cannot be empty")
 
-        conn_data: Dict[str, Any] = {
+        conn_data: dict[str, Any] = {
             "name1": z1,
             "name2": z2,
         }

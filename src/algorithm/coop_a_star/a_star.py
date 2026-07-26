@@ -1,10 +1,10 @@
 """Base A* pathfinding algorithm implementation."""
 
 from abc import abstractmethod
-from typing import List, Optional, Tuple, Set
 from heapq import heappop, heappush
-from ...models import Network, TemporalState
+
 from ...interfaces import Pathfinder
+from ...models import Network, TemporalState
 
 
 class AStarAlgorithm(Pathfinder):
@@ -20,36 +20,36 @@ class AStarAlgorithm(Pathfinder):
 
         This maintains admissibility.
         """
-        return float(abs(self.network[current_zone].x -
-                     self.network[target_zone].x) +
-                     abs(self.network[current_zone].y -
-                     self.network[target_zone].y)) * 0.25
+        return (
+            float(
+                abs(self.network[current_zone].x - self.network[target_zone].x)
+                + abs(self.network[current_zone].y -
+                      self.network[target_zone].y)
+            )
+            * 0.25
+        )
 
     @abstractmethod
-    def generate_valid_neighbors(self,
-                                 current_state: TemporalState,
-                                 target_zone: str
-                                 ) -> List[TemporalState]:
+    def generate_valid_neighbors(
+        self, current_state: TemporalState, target_zone: str
+    ) -> list[TemporalState]:
         """
         Generate all valid neighboring TemporalStates.
 
         Must be implemented by subclasses.
         """
-        pass
 
-    def get_state_key(self, state: TemporalState) -> Tuple[str, int] | str:
+    def get_state_key(self, state: TemporalState) -> tuple[str, int] | str:
         """Return a state key for Space-Time A* using zone_name and turn."""
         return (state.zone_name, state.turn)
 
     @abstractmethod
-    def on_path_found(self, path: List[Tuple[str, int]]) -> None:
+    def on_path_found(self, path: list[tuple[str, int]]) -> None:
         """Execute a hook for subclasses to act when a path is found."""
-        pass
 
-    def find_routes(self,
-                    start_zone: str,
-                    end_zone: str
-                    ) -> Optional[List[Tuple[str, int]]]:
+    def find_routes(
+        self, start_zone: str, end_zone: str
+    ) -> list[tuple[str, int]] | None:
         """
         Run the A* search from start_zone to end_zone.
 
@@ -60,11 +60,11 @@ class AStarAlgorithm(Pathfinder):
             g_cost=0.0,
             h_cost=self._calculate_h(start_zone, end_zone),
             turn=0,
-            zone_name=start_zone
-            )
+            zone_name=start_zone,
+        )
 
-        heap: List[TemporalState] = []
-        visited: Set[Tuple[str, int] | str] = set()
+        heap: list[TemporalState] = []
+        visited: set[tuple[str, int] | str] = set()
         heappush(heap, start_state)
 
         while heap:
@@ -72,7 +72,7 @@ class AStarAlgorithm(Pathfinder):
 
             if current_state.zone_name == end_zone:
                 path = []
-                curr: Optional[TemporalState] = current_state
+                curr: TemporalState | None = current_state
                 while curr:
                     path.append((curr.zone_name, curr.turn))
                     curr = curr.parent
@@ -86,8 +86,7 @@ class AStarAlgorithm(Pathfinder):
                 continue
             visited.add(state_key)
 
-            for neighbor in self.generate_valid_neighbors(current_state,
-                                                          end_zone):
+            for neighbor in self.generate_valid_neighbors(current_state, end_zone):
                 neighbor_key = self.get_state_key(neighbor)
                 if neighbor_key not in visited:
                     heappush(heap, neighbor)

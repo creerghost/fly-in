@@ -10,7 +10,7 @@ class Connection(BaseModel):
     Contains a specific traffic capacity.
     """
 
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
 
     name1: str
     name2: str

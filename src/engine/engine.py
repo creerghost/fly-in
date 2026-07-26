@@ -1,7 +1,7 @@
 """Simulation engine module."""
 
-from ..models import Drone, Network
 from ..interfaces import Engine, Pathfinder
+from ..models import Drone, Network
 
 
 class SimulationEngine(Engine):
@@ -27,7 +27,8 @@ class SimulationEngine(Engine):
         if self.network.start_hub is None:
             raise ValueError("Start hub is not defined in the network")
         self._drones = Drone.create_fleet(
-            self.network.nb_drones, self.network.start_hub.name)
+            self.network.nb_drones, self.network.start_hub.name
+        )
 
     def _plan_routes(self) -> None:
         """Execute pathfinding for all drones and register their paths."""
@@ -35,8 +36,8 @@ class SimulationEngine(Engine):
             raise ValueError("End hub is not defined in the network")
         for drone in self._drones:
             path = self.pathfinder.find_routes(
-                drone.current_location,
-                self.network.end_hub.name)
+                drone.current_location, self.network.end_hub.name
+            )
             if path is None:
                 raise ValueError(f"No valid path found for drone {drone.id}")
             drone.path = path

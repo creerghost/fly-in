@@ -1,7 +1,7 @@
 """Heads-up display statistics for the visualizer."""
 
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..models import Drone, Network
@@ -18,22 +18,24 @@ class HudStats:
 
     def __str__(self) -> str:
         """Return a string representation of the stats."""
-        return (f"Stats(Total: {self.total_drones}, "
-                f"Active: {self.active_drones}, "
-                f"Avg Turns: {self.avg_turns:.1f}, "
-                f"Cost: {self.total_cost:.1f})")
+        return (
+            f"Stats(Total: {self.total_drones}, "
+            f"Active: {self.active_drones}, "
+            f"Avg Turns: {self.avg_turns:.1f}, "
+            f"Cost: {self.total_cost:.1f})"
+        )
 
     def __repr__(self) -> str:
         """Return a detailed string representation of the stats."""
-        return (f"HudStats(total={self.total_drones}, "
-                f"active={self.active_drones}, "
-                f"avg={self.avg_turns:.2f}, "
-                f"cost={self.total_cost:.2f})")
+        return (
+            f"HudStats(total={self.total_drones}, "
+            f"active={self.active_drones}, "
+            f"avg={self.avg_turns:.2f}, "
+            f"cost={self.total_cost:.2f})"
+        )
 
     @classmethod
-    def from_drones(
-        cls, drones: List['Drone'], network: 'Network'
-    ) -> 'HudStats':
+    def from_drones(cls, drones: list["Drone"], network: "Network") -> "HudStats":
         """Compute all static HUD statistics based on planned drone paths."""
         total_cost_stats: int = 0
         total_drones = len(drones)
@@ -50,12 +52,15 @@ class HudStats:
                     zone = network[next_node]
                     total_cost_stats += zone.transit_time
 
-        avg_turns = (sum(d.path[-1][1] for d in drones if d.path) /
-                     total_drones if total_drones else 0.0)
+        avg_turns = (
+            sum(d.path[-1][1] for d in drones if d.path) / total_drones
+            if total_drones
+            else 0.0
+        )
 
         return cls(
             total_drones=total_drones,
             active_drones=0,
             avg_turns=avg_turns,
-            total_cost=total_cost_stats
+            total_cost=total_cost_stats,
         )

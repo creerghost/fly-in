@@ -1,14 +1,16 @@
 """Main application entry point for the simulation."""
 
-from ..parsers import Parser, ArgParser
-from ..algorithm.factory import PathfinderFactory
-from ..interfaces import Pathfinder, Engine, Renderer
-from ..engine import SimulationEngine
-from ..renderer import RendererFactory
 import sys
 
+from .controller import SimulationController
+from ..algorithm.factory import PathfinderFactory
+from ..engine import SimulationEngine
+from ..interfaces import Engine, Pathfinder
+from ..parsers import ArgParser, Parser
+from ..renderer import RendererFactory
 
-class Application():
+
+class Application:
     """Main application class."""
 
     @staticmethod
@@ -22,27 +24,32 @@ class Application():
             network = parser.parse()
 
             pathfinder: Pathfinder = PathfinderFactory.create(
-                args.algo, network
-            )
+                args.algo, network)
 
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
 
-            renderer: Renderer = RendererFactory.create(
-                visual, network, args.speed
-            )
+            renderers = RendererFactory.create(visual, network, args.speed)
 
-            renderer.run(engine.drones)
+            controller = SimulationController(
+                network=network,
+                drones=engine.drones,
+                renderers=renderers,
+                play_speed=args.speed,
+            )
+            controller.run()
 
         except Exception as e:
             print(f"Error: {e}")
             if visual:
                 import pygame
+
                 pygame.quit()
             sys.exit(1)
         except KeyboardInterrupt:
             print("\nBye!")
             if visual:
                 import pygame
+
                 pygame.quit()
             sys.exit(0)

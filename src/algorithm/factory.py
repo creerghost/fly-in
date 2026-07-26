@@ -1,7 +1,7 @@
 """Factory for creating pathfinding algorithms."""
 
+from ..interfaces import Factory, Pathfinder
 from ..models import Network
-from ..interfaces import Pathfinder, Factory
 from .coop_a_star.algorithm import CooperativeAStar
 from .coop_a_star.manager import CollisionManager
 

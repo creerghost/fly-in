@@ -1,6 +1,7 @@
 """Console and graphical renderer components."""
-from .pygame import PygameRenderer
-from .console_renderer import ConsoleRenderer
-from .factory import RendererFactory
 
-__all__ = ["PygameRenderer", "ConsoleRenderer", "RendererFactory"]
+from .cli_logger import CLILogger
+from .factory import RendererFactory
+from .pygame import PygameRenderer
+
+__all__ = ["CLILogger", "PygameRenderer", "RendererFactory"]

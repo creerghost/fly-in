@@ -11,4 +11,3 @@ class Factory(ABC):
     @abstractmethod
     def create(*args: Any, **kwargs: Any) -> Any:
         """Create and return an instance of a domain object."""
-        pass
