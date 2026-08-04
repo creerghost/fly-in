@@ -23,36 +23,11 @@ class PygameRenderer(Renderer):
         self.play_speed = play_speed
         self.config = RendererConfig()
 
-        pygame.init()
-        pygame.display.set_caption("Fly-in Drone Simulator")
-
+        self._init_pygame()
         self._canvas_size()
+        self._setup_dimensions()
+        self._init_fonts()
 
-        self.width = (
-            (self.canvas_max_x - self.canvas_min_x) * self.config.tile_size
-            + 2 * self.config.margin
-            + 50
-        )
-        self.height = (
-            (self.canvas_max_y - self.canvas_min_y) * self.config.tile_size
-            + 2 * self.config.margin
-            + self.config.panel_height
-        )
-        self._extend_width()
-
-        self.screen = pygame.display.set_mode((self.width, self.height))
-
-        # Fonts
-        self.font = pygame.font.SysFont(None, self.config.font_size_normal)
-        self.large_font = pygame.font.SysFont(
-            None, self.config.font_size_large
-        )
-        self.small_font = pygame.font.SysFont(
-            None, self.config.font_size_small
-        )
-        self.hud_font = pygame.font.SysFont(None, self.config.font_size_hud)
-
-        # Drawers
         self.network_drawer = NetworkDrawer(
             self.screen,
             self.config,
@@ -72,11 +47,23 @@ class PygameRenderer(Renderer):
             self.height,
         )
 
-    def _extend_width(self) -> None:
-        width = 650 - self.width
-        if width <= 0:
-            return
-        self.width += width
+    def _init_pygame(self) -> None:
+        pygame.init()
+        pygame.display.set_caption("Fly-in")
+        self.width = self.config.screen_wight
+        self.height = self.config.screen_height
+        self.screen = pygame.display.set_mode((self.width, self.height))
+
+    def _setup_dimensions(self) -> None:
+        map_w = max(1, self.canvas_max_x - self.canvas_min_x)
+        map_h = max(1, self.canvas_max_y - self.canvas_min_y)
+
+        play_w = self.width - (2 * self.config.margin)
+        play_h = self.height - self.config.panel_height - \
+            (2 * self.config.margin)
+
+        self.config.tile_size = max(10, int(min(play_w / map_w,
+                                    play_h / map_h)))
 
     def _canvas_size(self) -> None:
         """Determine the boundaries of the grid based on zone coordinates."""
@@ -90,6 +77,16 @@ class PygameRenderer(Renderer):
         self.canvas_max_x = max(x_coords)
         self.canvas_min_y = min(y_coords)
         self.canvas_max_y = max(y_coords)
+
+    def _init_fonts(self) -> None:
+        self.font = pygame.font.SysFont(None, self.config.font_size_normal)
+        self.large_font = pygame.font.SysFont(
+            None, self.config.font_size_large
+        )
+        self.small_font = pygame.font.SysFont(
+            None, self.config.font_size_small
+        )
+        self.hud_font = pygame.font.SysFont(None, self.config.font_size_hud)    
 
     def _get_pixel_coords(self, x: float, y: float) -> tuple[int, int]:
         """Convert grid coordinates to Pygame pixel coordinates."""
@@ -106,8 +103,8 @@ class PygameRenderer(Renderer):
         # For interpolation, we might need to cast to int if we want the
         # exact offset, but using float coordinates should be fine since the
         # original used round x/y.
-        px += 30 if round(y) % 2 == 0 else -10
-        py += 30 if round(x) % 2 != 0 else -10
+        px += 0 if round(y) % 2 == 0 else 0
+        py += 0 if round(x) % 2 != 0 else 0
 
         return int(px), int(py)
 
