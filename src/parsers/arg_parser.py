@@ -14,9 +14,11 @@ class ArgParser:
         )
         argparser.add_argument("filename", help="Path to the map file")
         argparser.add_argument(
-            "--visual",
-            action="store_true",
-            help="Enable the live terminal visualizer",
+            "--renderer",
+            type=str,
+            choices=["cli", "pygame"],
+            default="cli",
+            help="Select the renderer to use",
         )
         argparser.add_argument(
             "--speed",

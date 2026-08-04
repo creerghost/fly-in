@@ -16,7 +16,7 @@ UV      = uv
 PYTHON  = $(UV) run --group dev --active python
 
 FILE    ?= $(file)
-ARGS    ?= --visual
+ARGS    ?= --renderer pygame
 
 .PHONY: install gen_map run debug clean lint lint-strict help
 
@@ -103,9 +103,9 @@ help:
 	@printf "  $(GREEN)help$(RESET)               - Show this help message\n"
 	@printf "$(YELLOW)Optional arguments:$(RESET)\n"
 	@printf "  $(BLUE)FILE=path/to/map$(RESET)            - Specify a map file\n"
-	@printf "  $(BLUE)ARGS='--visual --speed=2.0'$(RESET) - Specify additional arguments\n"
+	@printf "  $(BLUE)ARGS='--renderer pygame --speed=2.0'$(RESET) - Specify additional arguments\n"
 	@printf ""
 	@printf "$(YELLOW)Examples:$(RESET)\n"
 	@printf "  make $(GREEN)run$(RESET) $(BLUE)FILE=maps/challenge/01_the_impossible_dream.txt$(RESET)\n"
-	@printf "  make $(GREEN)run$(RESET) $(BLUE)FILE=maps/challenge/01_the_impossible_dream.txt ARGS='--visual --speed=2.0'$(RESET)\n"
+	@printf "  make $(GREEN)run$(RESET) $(BLUE)FILE=maps/challenge/01_the_impossible_dream.txt ARGS='--renderer pygame --speed=2.0'$(RESET)\n"
 	@printf "============================================================================\n"

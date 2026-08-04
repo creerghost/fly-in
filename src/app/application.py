@@ -16,10 +16,10 @@ class Application:
     @staticmethod
     def run() -> None:
         """Run the simulation application."""
-        visual = False
+        renderer_type = "cli"
         try:
             args = ArgParser.parse()
-            visual = args.visual
+            renderer_type = args.renderer
             parser = Parser(args.filename)
             network = parser.parse()
 
@@ -29,7 +29,7 @@ class Application:
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
 
-            renderers = RendererFactory.create(visual, network, args.speed)
+            renderers = RendererFactory.create(renderer_type, network, args.speed)
 
             controller = SimulationController(
                 network=network,
@@ -41,14 +41,14 @@ class Application:
 
         except Exception as e:
             print(f"Error: {e}")
-            if visual:
+            if renderer_type == "pygame":
                 import pygame
 
                 pygame.quit()
             sys.exit(1)
         except KeyboardInterrupt:
             print("\nBye!")
-            if visual:
+            if renderer_type == "pygame":
                 import pygame
 
                 pygame.quit()
