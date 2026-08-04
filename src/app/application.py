@@ -24,12 +24,15 @@ class Application:
             network = parser.parse()
 
             pathfinder: Pathfinder = PathfinderFactory.create(
-                args.algo, network)
+                args.algo, network
+            )
 
             engine: Engine = SimulationEngine(network, pathfinder)
             engine.run()
 
-            renderers = RendererFactory.create(renderer_type, network, args.speed)
+            renderers = RendererFactory.create(
+                renderer_type, network, args.speed
+            )
 
             controller = SimulationController(
                 network=network,
