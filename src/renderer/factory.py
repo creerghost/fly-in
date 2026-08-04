@@ -3,6 +3,8 @@
 
 from ..interfaces import Factory, Renderer
 from ..models import Network
+from .cli_logger import CLILogger
+from .pygame import PygameRenderer
 
 
 class RendererFactory(Factory):
@@ -16,10 +18,6 @@ class RendererFactory(Factory):
         arguments.
         """
         if renderer_type == "pygame":
-            from .pygame import PygameRenderer
-
-            return [PygameRenderer(network, speed)]
-
-        from .cli_logger import CLILogger
+            return [CLILogger(), PygameRenderer(network, speed)]
 
         return [CLILogger()]
