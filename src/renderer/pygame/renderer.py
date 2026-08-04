@@ -50,7 +50,7 @@ class PygameRenderer(Renderer):
     def _init_pygame(self) -> None:
         pygame.init()
         pygame.display.set_caption("Fly-in")
-        self.width = self.config.screen_wight
+        self.width = self.config.screen_width
         self.height = self.config.screen_height
         self.screen = pygame.display.set_mode((self.width, self.height))
 
@@ -163,3 +163,16 @@ class PygameRenderer(Renderer):
         self.hud_drawer.draw_hud(hud_stats)
 
         pygame.display.flip()
+
+    @property
+    def is_interactive(self) -> bool:
+        """Return True if the renderer is interactive."""
+        return True
+
+    def reset(self) -> None:
+        """Reset the internal state of the renderer."""
+        pass
+
+    def cleanup(self) -> None:
+        """Clean up renderer resources."""
+        pygame.quit()

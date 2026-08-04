@@ -8,7 +8,7 @@ class RendererConfig:
     """Configuration settings for Pygame rendering to remove magic numbers."""
 
     # Dimensions
-    screen_wight: int = 1920
+    screen_width: int = 1920
     screen_height: int = 1080
 
     tile_size: int = 80

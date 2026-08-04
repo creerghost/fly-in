@@ -52,7 +52,7 @@ class SimulationController:
         # we can just run to the end instantly.
 
         has_interactive_renderer = any(
-            type(r).__name__ == "PygameRenderer"
+            r.is_interactive
             for r in self.renderers
         )
 
@@ -90,10 +90,7 @@ class SimulationController:
             if commands.get("quit"):
                 print("Bye!")
                 for renderer in self.renderers:
-                    if renderer.__class__.__name__ == "PygameRenderer":
-                        import pygame
-
-                        pygame.quit()
+                    renderer.cleanup()
                 sys.exit(0)
 
             if commands.get("toggle_pause"):
@@ -103,8 +100,7 @@ class SimulationController:
                 self.current_time = 0.0
                 # We need to also reset CLILogger's highest turn printed
                 for renderer in self.renderers:
-                    if hasattr(renderer, "highest_turn_printed"):
-                        renderer.highest_turn_printed = 0
+                    renderer.reset()
 
             if scrub_delta := commands.get("scrub_delta", 0.0):
                 self.current_time += scrub_delta

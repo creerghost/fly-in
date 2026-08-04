@@ -3,9 +3,9 @@
 import sys
 
 from .controller import SimulationController
-from ..algorithm.factory import PathfinderFactory
+from ..algorithm import PathfinderFactory
 from ..engine import SimulationEngine
-from ..interfaces import Engine, Pathfinder
+from ..interfaces import Engine, Pathfinder, Renderer
 from ..parsers import ArgParser, Parser
 from ..renderer import RendererFactory
 
@@ -17,6 +17,7 @@ class Application:
     def run() -> None:
         """Run the simulation application."""
         renderer_type = "cli"
+        renderers: list[Renderer] = []
         try:
             args = ArgParser.parse()
             renderer_type = args.renderer
@@ -44,15 +45,11 @@ class Application:
 
         except Exception as e:
             print(f"Error: {e}")
-            if renderer_type == "pygame":
-                import pygame
-
-                pygame.quit()
+            for r in renderers:
+                r.cleanup()
             sys.exit(1)
         except KeyboardInterrupt:
             print("\nBye!")
-            if renderer_type == "pygame":
-                import pygame
-
-                pygame.quit()
+            for r in renderers:
+                r.cleanup()
             sys.exit(0)
