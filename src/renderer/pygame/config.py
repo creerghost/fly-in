@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class RendererConfig:
     """Configuration settings for Pygame rendering to remove magic numbers."""

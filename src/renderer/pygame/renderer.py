@@ -86,7 +86,7 @@ class PygameRenderer(Renderer):
         self.small_font = pygame.font.SysFont(
             None, self.config.font_size_small
         )
-        self.hud_font = pygame.font.SysFont(None, self.config.font_size_hud)    
+        self.hud_font = pygame.font.SysFont(None, self.config.font_size_hud)
 
     def _get_pixel_coords(self, x: float, y: float) -> tuple[int, int]:
         """Convert grid coordinates to Pygame pixel coordinates."""
