@@ -1,4 +1,4 @@
-# Drone Simulation Challenge Maps
+# Fly-In: Drone Simulation Challenge Maps
 
 This collection contains carefully crafted maps designed to test different aspects of drone pathfinding algorithms, from basic navigation to complex optimization challenges.
 
@@ -7,14 +7,14 @@ This collection contains carefully crafted maps designed to test different aspec
 ### 🟢 Easy Maps
 **Target**: Beginners, basic algorithm testing
 - `01_linear_path.txt` - Simple linear progression (2 drones)
-- `02_simple_fork.txt` - Basic path splitting (3 drones)  
+- `02_simple_fork.txt` - Basic path splitting (4 drones)  
 - `03_basic_capacity.txt` - Introduction to capacity constraints (4 drones)
 
 ### 🟡 Medium Maps
 **Target**: Intermediate challenges, algorithm optimization
 - `01_dead_end_trap.txt` - Dead ends that can trap naive algorithms (5 drones)
 - `02_circular_loop.txt` - Circular paths with restricted zones (6 drones)
-- `03_priority_puzzle.txt` - Optimal path selection with priority zones (4 drones)
+- `03_priority_puzzle.txt` - Optimal path selection with priority zones (5 drones)
 
 ### 🔴 Hard Maps
 **Target**: Advanced algorithms, stress testing
@@ -28,7 +28,7 @@ This collection contains carefully crafted maps designed to test different aspec
 
 > ⚠️ **WARNING**: Challenger maps are designed to push algorithmic limits and may not be solvable by most implementations. They are intended for research, stress testing, and algorithmic exploration rather than validation. The goal is to challenge the boundaries of what's possible, not to pass evaluation criteria.
 
-> 🏆 **CHALLENGE RECORD**: The reference implementation solves "The Impossible Dream" in **41 turns**. Can you beat this record? This serves as a benchmark for algorithmic optimization and provides a concrete goal for advanced implementations.
+> 🏆 **CHALLENGE RECORD**: The reference implementation solves "The Impossible Dream" in **45 turns**. Can you beat this record? This serves as a benchmark for algorithmic optimization and provides a concrete goal for advanced implementations.
 
 ## Challenge Types Covered
 
@@ -74,17 +74,4 @@ All maps are designed to be solvable with a well-implemented algorithm. However:
 - **Easy**: < 10 simulation turns typically
 - **Medium**: 10-30 simulation turns depending on optimization
 - **Hard**: 30+ simulation turns, focus on finding valid solutions
-- **Challenger**: **Record to beat: 41 turns** for "The Impossible Dream" - designed for algorithmic research
-
-## Visual Representation
-
-Maps use color coding for enhanced understanding:
-- 🟢 **Green**: Start/End zones
-- 🔵 **Blue**: Normal paths
-- 🟡 **Yellow**: Junction/merge points
-- 🟠 **Orange**: Bottlenecks/gates
-- 🔴 **Red**: Dead ends/traps
-- 🟣 **Purple**: Restricted zones
-- 🔵 **Cyan**: Priority zones
-
-Use the `--visual` flag to see colored terminal output during simulation!
+- **Challenger**: **Record to beat: 45 turns** for "The Impossible Dream" - designed for algorithmic research
