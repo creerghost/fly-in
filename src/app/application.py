@@ -48,7 +48,7 @@ class Application:
             msg = error['msg']
             if msg.startswith("Value error, "):
                 msg = msg[len("Value error, "):]
-            
+
             loc = error.get('loc', ())
             # ignore root model validations which don't have a specific field
             if loc and loc[0] != '__root__':
