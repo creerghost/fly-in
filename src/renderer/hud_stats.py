@@ -36,15 +36,23 @@ class HudStats:
 
     @classmethod
     def from_drones(
-        cls, drones: list["Drone"], network: "Network"
+        cls, drones: list["Drone"], network: "Network",
+        current_time: float,
     ) -> "HudStats":
-        """Compute all static HUD statistics based on planned drone paths."""
+        """Compute all HUD statistics based on planned drone paths."""
         total_cost_stats: int = 0
         total_drones = len(drones)
+        active_drones = 0
 
         for d in drones:
             if not d.path:
                 continue
+
+            # Count active (in-transit) drones
+            _, _, _, is_transit = d.get_render_state(current_time)
+            if is_transit:
+                active_drones += 1
+
             for curr_step, next_step in zip(d.path[:-1], d.path[1:]):
                 prev_node = curr_step[0]
                 next_node = next_step[0]
@@ -62,7 +70,7 @@ class HudStats:
 
         return cls(
             total_drones=total_drones,
-            active_drones=0,
+            active_drones=active_drones,
             avg_turns=avg_turns,
             total_cost=total_cost_stats,
         )

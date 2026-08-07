@@ -31,15 +31,12 @@ class DroneDrawer:
 
     def draw_drones(
         self, t_current: float, drones: list[Drone], network: Network
-    ) -> int:
+    ) -> None:
         """
-        Calculate and draw drones.
-
-        Returns the number of active drones in transit.
+        Calculate and draw drones on the network.
         """
         drone_groups: dict[tuple[int, int], list[Drone]] = {}
         drone_transits: dict[tuple[int, int], bool] = {}
-        active_drones = 0
 
         for drone in drones:
             start_zone_name, end_zone_name, t_smooth, transit = (
@@ -57,9 +54,6 @@ class DroneDrawer:
 
             px, py = int(px_f), int(py_f)
 
-            if transit:
-                active_drones += 1
-
             coord = (px, py)
             if coord not in drone_groups:
                 drone_groups[coord] = []
@@ -69,8 +63,6 @@ class DroneDrawer:
         for coord, d_list in drone_groups.items():
             self._draw_drone_marker(
                 coord[0], coord[1], d_list, drone_transits[coord])
-
-        return active_drones
 
     def _draw_drone_marker(
         self, px: int, py: int, drones_list: list[Drone], transit: bool

@@ -1,13 +1,13 @@
 """Factory for creating renderer instances."""
 
 
-from ..interfaces import Factory, Renderer
+from ..interfaces import Renderer
 from ..models import Network
 from .cli_logger import CLILogger
 from .pygame import PygameRenderer
 
 
-class RendererFactory(Factory):
+class RendererFactory:
     """Factory class for instantiating renderers."""
 
     @staticmethod

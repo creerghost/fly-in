@@ -3,11 +3,14 @@
 from abc import ABC, abstractmethod
 
 from ..models import Drone
-from .runnable import Runnable
 
 
-class Engine(Runnable, ABC):
+class Engine(ABC):
     """Interface for the simulation engine."""
+
+    @abstractmethod
+    def run(self) -> None:
+        """Execute the simulation."""
 
     @property
     @abstractmethod

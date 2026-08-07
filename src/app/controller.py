@@ -3,7 +3,7 @@
 import sys
 import time
 
-from ..interfaces import Renderer
+from ..interfaces import InteractiveRenderer, Renderer
 from ..models import Drone, Network
 
 
@@ -44,15 +44,8 @@ class SimulationController:
         """
         last_time = time.time()
 
-        # Determine if we have a real-time requirement (visual mode)
-        # If no renderers return a scrub delta, it means we don't have a UI,
-        # so we can just blast through time if we want, or run turn-by-turn.
-        # But since we use CLILogger alongside PygameRenderer (optionally),
-        # we need a standard loop. If there's no UI,
-        # we can just run to the end instantly.
-
         has_interactive_renderer = any(
-            r.is_interactive
+            isinstance(r, InteractiveRenderer)
             for r in self.renderers
         )
 
@@ -83,8 +76,11 @@ class SimulationController:
             time.sleep(1 / 60.0)
 
     def _handle_events(self, dt: float) -> None:
-        """Gather commands from renderers and process them."""
+        """Gather commands from interactive renderers and process them."""
         for r in self.renderers:
+            if not isinstance(r, InteractiveRenderer):
+                continue
+
             commands = r.handle_events(dt)
 
             if commands.get("quit"):
@@ -98,7 +94,6 @@ class SimulationController:
 
             if commands.get("reset"):
                 self.current_time = 0.0
-                # We need to also reset CLILogger's highest turn printed
                 for renderer in self.renderers:
                     renderer.reset()
 
@@ -109,9 +104,6 @@ class SimulationController:
         """Advance time if playing, and bound it within limits."""
         play_speed = 0.0 if self.is_paused else self.play_speed
 
-        # Only advance time if we didn't already scrub in handle_events
-        # If we are playing, time should advance normally even if scrubbing?
-        # Typically we just add dt * play_speed
         self.current_time += dt * play_speed
 
         # Bound current time

@@ -35,11 +35,6 @@ class CLILogger(Renderer):
             if turn_output:
                 print(" ".join(turn_output))
 
-    @property
-    def is_interactive(self) -> bool:
-        """Return True if the renderer is interactive."""
-        return False
-
     def reset(self) -> None:
         """Reset the internal state of the renderer."""
         self.highest_turn_printed = 0
@@ -47,11 +42,3 @@ class CLILogger(Renderer):
     def cleanup(self) -> None:
         """Clean up renderer resources."""
         pass
-
-    def handle_events(self, dt: float) -> dict:
-        """
-        Handle events (none for CLI logger).
-
-        Returns an empty dict.
-        """
-        return {}

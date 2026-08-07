@@ -3,9 +3,7 @@
 from .algorithm import Pathfinder
 from .collision_manager import Manager
 from .engine import Engine
-from .factory import Factory
-from .renderer import Renderer
-from .runnable import Runnable
+from .renderer import InteractiveRenderer, Renderer
 
-__all__ = ["Engine", "Factory", "Manager",
-           "Pathfinder", "Renderer", "Runnable"]
+__all__ = ["Engine", "InteractiveRenderer", "Manager",
+           "Pathfinder", "Renderer"]

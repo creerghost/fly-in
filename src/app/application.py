@@ -16,11 +16,9 @@ class Application:
     @staticmethod
     def run() -> None:
         """Run the simulation application."""
-        renderer_type = "cli"
         renderers: list[Renderer] = []
         try:
             args = ArgParser.parse()
-            renderer_type = args.renderer
             parser = Parser(args.filename)
             network = parser.parse()
 
@@ -32,7 +30,7 @@ class Application:
             engine.run()
 
             renderers = RendererFactory.create(
-                renderer_type, network, args.speed
+                args.renderer, network, args.speed
             )
 
             controller = SimulationController(

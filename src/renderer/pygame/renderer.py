@@ -3,14 +3,14 @@
 
 import pygame
 
-from ...interfaces import Renderer
+from ...interfaces import InteractiveRenderer
 from ...models import Drone, Network
 from ..hud_stats import HudStats
 from .config import RendererConfig
 from .drawers import DroneDrawer, HUDDrawer, NetworkDrawer
 
 
-class PygameRenderer(Renderer):
+class PygameRenderer(InteractiveRenderer):
     """
     Handle the graphical display of the simulation using Pygame.
 
@@ -149,25 +149,19 @@ class PygameRenderer(Renderer):
         """
         self.screen.fill(self.config.bg_color)
 
-        hud_stats = HudStats.from_drones(drones, self.network)
+        hud_stats = HudStats.from_drones(drones, self.network, current_time)
 
         self.hud_drawer.draw_overlays(current_time)
         self.network_drawer.draw_connections(self.network)
         self.network_drawer.draw_zones(self.network)
 
-        active_drones = self.drone_drawer.draw_drones(
+        self.drone_drawer.draw_drones(
             current_time, drones, self.network
         )
-        hud_stats.active_drones = active_drones
 
         self.hud_drawer.draw_hud(hud_stats)
 
         pygame.display.flip()
-
-    @property
-    def is_interactive(self) -> bool:
-        """Return True if the renderer is interactive."""
-        return True
 
     def reset(self) -> None:
         """Reset the internal state of the renderer."""
