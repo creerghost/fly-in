@@ -483,5 +483,7 @@ AI assistance was utilized during the development of this project for the follow
 - **Algorithm Comprehension:** AI helped me better understand the algorithm, especially the space-time pathfinding part.
 - **Debugging and Refactoring:** Assisting in identifying edge cases within the space-time A* pathfinding implementation.
 - **Documentation & Testing:** Helping structure and proofread this `README.md` to ensure it meets all curriculum requirements, and generating PEP 257 compliant docstrings for classes and methods across the codebase.
+- **Visuals & Rendering:** AI helped implement a smoothstep (sigmoid-like) function for drone animation interpolation, suggested using `pygame.gfxdraw` for anti-aliased circles, and assisted in a rendering redesign to allow for fast color theme changes and reduced manual drawing work.
+- **Design Patterns:** AI explained and demonstrated SOLID and OOP principles in practice, helping me structure the codebase more effectively.
 
 The core logical design, algorithmic choices, and constraints enforcement were driven by the developer, with AI acting as a supportive peer-programming tool.
