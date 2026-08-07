@@ -73,10 +73,9 @@ fly-in/
     ├── app/
     │   └── application.py     # Application — wires everything together
     ├── interfaces/            # Abstract base classes (contracts)
-    │   ├── runnable.py        #   Runnable — anything with a run() method
     │   ├── algorithm.py       #   Pathfinder — find_routes()
-    │   ├── engine.py          #   Engine — extends Runnable, exposes drones
-    │   ├── renderer.py        #   Renderer — run(drones)
+    │   ├── engine.py          #   Engine — exposes drones and run()
+    │   ├── renderer.py        #   Renderer & InteractiveRenderer
     │   └── collision_manager.py  # Manager — zone/link availability
     ├── models/                # Domain models
     │   ├── zone.py            #   Zone + ZoneType enum
@@ -110,12 +109,9 @@ The project follows an object-oriented design where every major component implem
 
 ```mermaid
 classDiagram
-    class Runnable {
-        <<interface>>
-        +run() None
-    }
     class Engine {
         <<interface>>
+        +run() None
         +drones: List~Drone~
     }
     class Pathfinder {
@@ -124,7 +120,13 @@ classDiagram
     }
     class Renderer {
         <<interface>>
-        +run(drones) None
+        +render(current_time, max_turn, drones) None
+        +reset() None
+        +cleanup() None
+    }
+    class InteractiveRenderer {
+        <<interface>>
+        +handle_events(dt) dict
     }
     class Manager {
         <<interface>>
@@ -133,13 +135,13 @@ classDiagram
         +register_path()
     }
 
-    Runnable <|-- Engine
     Engine <|.. SimulationEngine
     Pathfinder <|.. AStarAlgorithm
     AStarAlgorithm <|-- CooperativeAStar
     Manager <|.. CollisionManager
-    Renderer <|.. ConsoleRenderer
-    Renderer <|.. PygameRenderer
+    Renderer <|-- InteractiveRenderer
+    Renderer <|.. CLILogger
+    InteractiveRenderer <|.. PygameRenderer
 
     SimulationEngine --> Pathfinder : uses
     CooperativeAStar --> Manager : uses
