@@ -144,9 +144,7 @@ class PygameRenderer(InteractiveRenderer):
     def render(
         self, current_time: float, max_turn: float, drones: list[Drone]
     ) -> None:
-        """
-        Render the simulation frame.
-        """
+        """Render the simulation frame."""
         self.screen.fill(self.config.bg_color)
 
         hud_stats = HudStats.from_drones(drones, self.network, current_time)

@@ -32,9 +32,7 @@ class DroneDrawer:
     def draw_drones(
         self, t_current: float, drones: list[Drone], network: Network
     ) -> None:
-        """
-        Calculate and draw drones on the network.
-        """
+        """Calculate and draw drones on the network."""
         drone_groups: dict[tuple[int, int], list[Drone]] = {}
         drone_transits: dict[tuple[int, int], bool] = {}
 

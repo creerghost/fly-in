@@ -14,9 +14,7 @@ class RendererFactory:
     def create(
         renderer_type: str, network: Network, speed: float = 1.0
     ) -> list[Renderer]:
-        """Create a list of renderer instances based on command line
-        arguments.
-        """
+        """Create a list of renderer instances based on the requested type."""
         if renderer_type == "pygame":
             return [CLILogger(), PygameRenderer(network, speed)]
 

@@ -17,4 +17,6 @@ dev = [
     "flake8>=7.0.0",
     "mypy>=1.10.0",
     "google-genai>=0.2.0",
+    "flake8-docstrings>=1.7.0",
+    "pydocstyle>=6.3.0",
 ]
