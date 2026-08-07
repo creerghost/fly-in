@@ -44,6 +44,7 @@ class CooperativeAStar(AStarAlgorithm):
         ):
             wait_state = TemporalState(
                 f_cost=(current_state.g_cost + 1.0) + current_state.h_cost,
+                move_penalty=current_state.move_penalty,
                 g_cost=current_state.g_cost + 1.0,
                 h_cost=current_state.h_cost,
                 turn=next_turn,
@@ -80,6 +81,7 @@ class CooperativeAStar(AStarAlgorithm):
 
                 new_state = TemporalState(
                     f_cost=new_g_cost + new_h_cost,
+                    move_penalty=current_state.move_penalty + 1,
                     g_cost=new_g_cost,
                     h_cost=new_h_cost,
                     turn=next_turn,

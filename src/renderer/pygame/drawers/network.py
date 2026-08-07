@@ -1,9 +1,10 @@
 """Network drawer component."""
 
-import sys
 from collections.abc import Callable
 
+import sys
 import pygame
+import pygame.gfxdraw
 
 from ....models import Network
 from ..colors import Colors
@@ -52,14 +53,28 @@ class NetworkDrawer:
                     self.config.connection_outline_width,
                 )
 
-                mlc = self.small_font.render(
-                    f"{con.max_link_capacity}", True, Colors.WHITE.value
+                mlc_text = f"{con.max_link_capacity}"
+                mlc_bg = self.small_font.render(
+                    mlc_text, True, Colors.BLACK.value
+                )
+                mlc_fg = self.small_font.render(
+                    mlc_text, True, Colors.WHITE.value
                 )
                 z_x = (p1[0] + p2[0]) // 2
                 z_y = (p1[1] + p2[1]) // 2
                 self.screen.blit(
-                    mlc, (z_x - mlc.get_width() // 2,
-                          z_y - mlc.get_height() // 2)
+                    mlc_bg,
+                    (
+                        z_x - mlc_bg.get_width() // 2 + 1,
+                        z_y - mlc_bg.get_height() // 2 + 1,
+                    ),
+                )
+                self.screen.blit(
+                    mlc_fg,
+                    (
+                        z_x - mlc_fg.get_width() // 2,
+                        z_y - mlc_fg.get_height() // 2,
+                    ),
                 )
 
     def draw_zones(self, network: Network) -> None:
@@ -69,23 +84,37 @@ class NetworkDrawer:
             color_name = zone.color if zone.color else "white"
             rgb = getattr(Colors, color_name.upper(), Colors.WHITE).value
 
-            pygame.draw.circle(
-                self.screen,
-                Colors.WHITE.value,
-                (px, py),
-                self.config.zone_radius,
+            pygame.gfxdraw.aacircle(
+                self.screen, px, py, self.config.zone_radius,
+                Colors.WHITE.value
             )
-            pygame.draw.circle(
-                self.screen, rgb, (px, py), self.config.zone_inner_radius
+            pygame.gfxdraw.filled_circle(
+                self.screen, px, py, self.config.zone_radius,
+                Colors.WHITE.value
             )
 
-            cords = self.font.render(
-                f"{zone.x},{zone.y}", True, Colors.WHITE.value)
+            pygame.gfxdraw.aacircle(
+                self.screen, px, py, self.config.zone_inner_radius, rgb
+            )
+            pygame.gfxdraw.filled_circle(
+                self.screen, px, py, self.config.zone_inner_radius, rgb
+            )
+
+            cords_text = f"{zone.x},{zone.y}"
+            cords_bg = self.font.render(cords_text, True, Colors.BLACK.value)
+            cords_fg = self.font.render(cords_text, True, Colors.WHITE.value)
             self.screen.blit(
-                cords,
+                cords_bg,
                 (
-                    px - cords.get_width() // 2,
-                    py - cords.get_height() // 2 - 30,
+                    px - cords_fg.get_width() // 2 + 1,
+                    py - cords_fg.get_height() // 2 - 30 + 1,
+                ),
+            )
+            self.screen.blit(
+                cords_fg,
+                (
+                    px - cords_fg.get_width() // 2,
+                    py - cords_fg.get_height() // 2 - 30,
                 ),
             )
 
@@ -93,21 +122,38 @@ class NetworkDrawer:
                 cap_text = "inf"
             else:
                 cap_text = f"{zone.max_drones}"
-            cap = self.font.render(cap_text, True, Colors.BLACK.value)
+            cap_bg = self.font.render(cap_text, True, Colors.BLACK.value)
+            cap_fg = self.font.render(cap_text, True, Colors.WHITE.value)
             self.screen.blit(
-                cap, (px - cap.get_width() // 2,
-                      py - cap.get_height() // 2 + 14)
+                cap_bg,
+                (
+                    px - cap_fg.get_width() // 2 + 1,
+                    py - cap_fg.get_height() // 2 + 14 + 1,
+                ),
+            )
+            self.screen.blit(
+                cap_fg,
+                (
+                    px - cap_fg.get_width() // 2,
+                    py - cap_fg.get_height() // 2 + 14,
+                ),
             )
 
-            lbl: pygame.Surface | None = None
+            lbl_text = ""
             if network.start_hub and zone.name == network.start_hub.name:
-                lbl = self.font.render("Start", True, Colors.BLACK.value)
+                lbl_text = "Start"
             elif network.end_hub and zone.name == network.end_hub.name:
-                lbl = self.font.render("End", True, Colors.BLACK.value)
-            elif zone.zone_type.display_label:
-                lbl = self.font.render(
-                    zone.zone_type.display_label, True, Colors.BLACK.value
-                )
+                lbl_text = "End"
+
+            if zone.zone_type.display_label:
+                if lbl_text:
+                    lbl_text += f" ({zone.zone_type.display_label})"
+                else:
+                    lbl_text = zone.zone_type.display_label
+
+            lbl: pygame.Surface | None = None
+            if lbl_text:
+                lbl = self.font.render(lbl_text, True, Colors.BLACK.value)
 
             if lbl:
                 self.screen.blit(

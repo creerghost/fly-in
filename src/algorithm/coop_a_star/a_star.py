@@ -53,6 +53,7 @@ class AStarAlgorithm(Pathfinder):
         """
         start_state = TemporalState(
             f_cost=0.0,
+            move_penalty=0,
             g_cost=0.0,
             h_cost=self._calculate_h(start_zone, end_zone),
             turn=0,

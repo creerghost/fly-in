@@ -16,9 +16,9 @@ class RendererConfig:
     panel_height: int = 250
 
     # Colors
-    bg_color: tuple[int, int, int] = (35, 25, 60)
-    panel_bg_color: tuple[int, int, int] = (20, 10, 30)
-    line_outline_color: tuple[int, int, int] = (80, 80, 100)
+    bg_color: tuple[int, int, int] = (15, 30, 50)
+    panel_bg_color: tuple[int, int, int] = (10, 18, 35)
+    line_outline_color: tuple[int, int, int] = (130, 190, 240)
 
     # Font sizes
     font_size_small: int = 14
