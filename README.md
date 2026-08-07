@@ -55,8 +55,8 @@ Every component depends on interfaces rather than concrete classes, making it ea
 
 ```
 fly-in/
-├── fly_in.py                 # Legacy entry point (calls src.__main__)
 ├── pyproject.toml             # Project metadata and dependencies (uv)
+├── uv.lock                    # Dependency lockfile
 ├── Makefile                   # Build, run, lint, and clean targets
 ├── imgs/
 │   └── drone.bmp              # Drone sprite for the Pygame visualizer
@@ -65,8 +65,6 @@ fly-in/
 │   ├── medium/
 │   ├── hard/
 │   └── challenger/
-├── scripts/
-│   └── auto_lint_fixer.py     # CI linter helper
 └── src/                       # Main source package
     ├── __init__.py
     ├── __main__.py            # Entry point: python -m src
