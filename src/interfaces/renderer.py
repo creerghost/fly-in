@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from typing import List
+from typing import List, Any
 from ..models import Drone
 
 
@@ -28,7 +28,7 @@ class InteractiveRenderer(Renderer):
     """Interface for renderers that handle user interaction."""
 
     @abstractmethod
-    def handle_events(self, dt: float) -> dict:
+    def handle_events(self, dt: float) -> dict[str, Any]:
         """
         Handle input events and return playback commands.
 

@@ -2,6 +2,7 @@
 
 
 import pygame
+from typing import Any
 
 from ...interfaces import InteractiveRenderer
 from ...models import Drone, Network
@@ -108,7 +109,7 @@ class PygameRenderer(InteractiveRenderer):
 
         return int(px), int(py)
 
-    def handle_events(self, dt: float) -> dict:
+    def handle_events(self, dt: float) -> dict[str, Any]:
         """
         Process keyboard events for pausing, scrubbing time, and quitting.
 
