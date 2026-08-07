@@ -13,13 +13,14 @@ class CooperativeAStar(AStarAlgorithm):
     Respects reservation constraints.
     """
 
-    def __init__(self, network: Network, reservations: Manager) -> None:
+    def __init__(self, network: Network, reservations: Manager,
+                 max_turns: int = 1000) -> None:
         """
         Initialize the pathfinder with the network topology.
 
         Uses the global reservation table.
         """
-        super().__init__(network)
+        super().__init__(network, max_turns=max_turns)
         self.reservations = reservations
 
     def on_path_found(self, path: list[tuple[str, int]]) -> None:

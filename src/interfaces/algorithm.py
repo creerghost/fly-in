@@ -6,6 +6,10 @@ from abc import ABC, abstractmethod
 class Pathfinder(ABC):
     """Interface for Multi-Agent Pathfinding algorithms."""
 
+    def __init__(self, max_turns: int = 1000) -> None:
+        """Initialize the pathfinder with a maximum turn limit."""
+        self.max_turns = max_turns
+
     @abstractmethod
     def find_routes(
         self, start_zone: str, end_zone: str

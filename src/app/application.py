@@ -2,6 +2,8 @@
 
 import sys
 
+from pydantic import ValidationError
+
 from .controller import SimulationController
 from ..algorithm import PathfinderFactory
 from ..engine import SimulationEngine
@@ -41,6 +43,22 @@ class Application:
             )
             controller.run()
 
+        except ValidationError as e:
+            error = e.errors()[0]
+            msg = error['msg']
+            if msg.startswith("Value error, "):
+                msg = msg[len("Value error, "):]
+            
+            loc = error.get('loc', ())
+            # ignore root model validations which don't have a specific field
+            if loc and loc[0] != '__root__':
+                loc_str = " -> ".join(str(x) for x in loc)
+                print(f"Error in '{loc_str}': {msg}")
+            else:
+                print(f"Error: {msg}")
+            for r in renderers:
+                r.cleanup()
+            sys.exit(1)
         except Exception as e:
             print(f"Error: {e}")
             for r in renderers:

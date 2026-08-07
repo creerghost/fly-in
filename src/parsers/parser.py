@@ -43,9 +43,9 @@ class Parser:
                         )
                     self._parse_line(line, l_num)
             # self._validate()
-            if self._start_hub_count != 1:
+            if self._start_hub_count > 1:
                 raise ValueError("Only one start_hub is allowed")
-            if self._end_hub_count != 1:
+            if self._end_hub_count > 1:
                 raise ValueError("Only one end_hub is allowed")
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.filepath}' not found")

@@ -17,7 +17,7 @@ class Network(BaseModel):
     Validates zones, connections, and builds searchable adjacency lists.
     """
 
-    nb_drones: int = Field(gt=0)
+    nb_drones: int = Field(..., gt=0, le=1000)
     start_hub: Zone
     end_hub: Zone
     hubs: list[Zone] | None = Field(default=None)
@@ -43,6 +43,7 @@ class Network(BaseModel):
             if (zone.x, zone.y) in seen_zones:
                 raise ValueError("Zone coordinates already exist")
             seen_zones.add((zone.x, zone.y))
+
         return self
 
     @model_validator(mode="after")
@@ -78,6 +79,11 @@ class Network(BaseModel):
 
         Stores them for quick lookup and builds adjacency lists.
         """
+        if self.start_hub.zone_type.value == "blocked":
+            raise ValueError("Start hub cannot be blocked")
+        if self.end_hub.zone_type.value == "blocked":
+            raise ValueError("End hub cannot be blocked")
+
         self.start_hub.max_drones = sys.maxsize
         self.end_hub.max_drones = sys.maxsize
 
@@ -95,6 +101,31 @@ class Network(BaseModel):
                 (self.zones[con.name2], con))
             self.neighboring_zones[con.name2].append(
                 (self.zones[con.name1], con))
+
+        self._check_connectivity()
+
+    def _check_connectivity(self) -> None:
+        """Ensure there is at least one valid path from start to end hub."""
+        visited: set[str] = set()
+        stack = [self.start_hub.name]
+
+        while stack:
+            current = stack.pop()
+            if current == self.end_hub.name:
+                return
+
+            if current in visited:
+                continue
+            visited.add(current)
+
+            for neighbor, _ in self.neighboring_zones[current]:
+                if neighbor.is_traversable and neighbor.name not in visited:
+                    stack.append(neighbor.name)
+
+        raise ValueError(
+            "End hub is unreachable from start hub "
+            "(disconnected graph or blocked path)"
+        )
 
     def __len__(self) -> int:
         """Return the number of zones in the network."""

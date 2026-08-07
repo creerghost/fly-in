@@ -10,8 +10,9 @@ from ...models import Network, TemporalState
 class AStarAlgorithm(Pathfinder):
     """Abstract base class for A* based pathfinding algorithms."""
 
-    def __init__(self, network: Network) -> None:
+    def __init__(self, network: Network, max_turns: int = 1000) -> None:
         """Initialize the pathfinder with the network topology."""
+        super().__init__(max_turns)
         self.network = network
 
     def _calculate_h(self, current_zone: str, target_zone: str) -> float:
@@ -85,7 +86,8 @@ class AStarAlgorithm(Pathfinder):
                 current_state, end_zone
             ):
                 neighbor_key = self.get_state_key(neighbor)
-                if neighbor_key not in visited:
+                if (neighbor_key not in visited and
+                        neighbor.turn <= self.max_turns):
                     heappush(heap, neighbor)
 
         return None
