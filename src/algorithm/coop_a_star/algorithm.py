@@ -77,6 +77,15 @@ class CooperativeAStar(AStarAlgorithm):
                 neighbor.name, next_turn, neighbor.max_drones
             ):
                 new_g_cost = current_state.g_cost + step_cost
+
+                # Penalize revisiting a zone to prevent back-and-forth loops
+                curr = current_state
+                while curr:
+                    if curr.zone_name == neighbor.name:
+                        new_g_cost += 10
+                        break
+                    curr = curr.parent
+
                 new_h_cost = self._calculate_h(neighbor.name, target_zone)
 
                 new_state = TemporalState(
