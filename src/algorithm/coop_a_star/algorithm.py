@@ -79,7 +79,7 @@ class CooperativeAStar(AStarAlgorithm):
                 new_g_cost = current_state.g_cost + step_cost
 
                 # Penalize revisiting a zone to prevent back-and-forth loops
-                curr = current_state
+                curr: TemporalState | None = current_state
                 while curr:
                     if curr.zone_name == neighbor.name:
                         new_g_cost += 10
