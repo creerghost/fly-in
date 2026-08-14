@@ -1,5 +1,6 @@
 """Command-line output logger for the simulation."""
 
+from typing import Optional
 
 from ..interfaces import Renderer
 from ..models import Drone, Network
@@ -12,7 +13,7 @@ class CLILogger(Renderer):
     Only prints when the time scrubs forward past a new integer turn.
     """
 
-    def __init__(self, network: Network = None) -> None:
+    def __init__(self, network: Optional[Network] = None) -> None:
         """Initialize the CLI logger."""
         self.highest_turn_printed = 0
         self.network = network
