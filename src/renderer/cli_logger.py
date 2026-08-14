@@ -2,7 +2,7 @@
 
 
 from ..interfaces import Renderer
-from ..models import Drone
+from ..models import Drone, Network
 
 
 class CLILogger(Renderer):
@@ -12,9 +12,10 @@ class CLILogger(Renderer):
     Only prints when the time scrubs forward past a new integer turn.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, network: Network = None) -> None:
         """Initialize the CLI logger."""
         self.highest_turn_printed = 0
+        self.network = network
 
     def render(
         self, current_time: float, max_turn: float, drones: list[Drone]

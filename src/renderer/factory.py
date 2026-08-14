@@ -16,6 +16,6 @@ class RendererFactory:
     ) -> list[Renderer]:
         """Create a list of renderer instances based on the requested type."""
         if renderer_type == "pygame":
-            return [CLILogger(), PygameRenderer(network, speed)]
+            return [CLILogger(network), PygameRenderer(network, speed)]
 
-        return [CLILogger()]
+        return [CLILogger(network)]
