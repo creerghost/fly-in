@@ -69,7 +69,8 @@ fly-in/
     ├── __init__.py
     ├── __main__.py            # Entry point: python -m src
     ├── app/
-    │   └── application.py     # Application — wires everything together
+    │   ├── application.py     # Application — wires everything together
+    │   └── controller.py      # SimulationController — playback loop
     ├── interfaces/            # Abstract base classes (contracts)
     │   ├── algorithm.py       #   Pathfinder — find_routes()
     │   ├── engine.py          #   Engine — exposes drones and run()
@@ -93,10 +94,14 @@ fly-in/
     ├── engine/
     │   └── engine.py          # SimulationEngine — drone lifecycle + routing
     └── renderer/              # Output / visualization
-        ├── colors.py          #   Color enum for Pygame
+        ├── cli_logger.py      #   CLILogger — prints turns to stdout
+        ├── factory.py         #   RendererFactory — creates renderers
         ├── hud_stats.py       #   HUD statistics dataclass
-        ├── console_renderer.py  # ConsoleRenderer — prints turns to stdout
-        └── renderer.py        #   PygameRenderer — interactive visualizer
+        └── pygame/            #   Pygame interactive visualizer
+            ├── colors.py      #     Color enum
+            ├── config.py      #     Display configuration
+            ├── renderer.py    #     PygameRenderer
+            └── drawers/       #     Drawing components
 ```
 
 ---
@@ -185,22 +190,22 @@ You can also provide your own map or extra arguments:
 make run FILE=maps/hard/02_capacity_hell.txt
 
 # Enable the Pygame visualizer at 2x speed
-make run ARGS="--visual --speed=2.0"
+make run ARGS="--renderer pygame --speed=2.0"
 
 # Combine both
-make run FILE=maps/hard/02_capacity_hell.txt ARGS="--visual"
+make run FILE=maps/hard/02_capacity_hell.txt ARGS="--renderer pygame"
 ```
 
 Or run the simulator directly:
 
 ```bash
 python -m src maps/easy/01_linear_path.txt
-python -m src maps/medium/03_priority_puzzle.txt --visual
-python -m src maps/hard/02_capacity_hell.txt --visual --speed 2.0
+python -m src maps/medium/03_priority_puzzle.txt --renderer pygame
+python -m src maps/hard/02_capacity_hell.txt --renderer pygame --speed 2.0
 ```
 
 > [!TIP]
-> When running with the visualizer, you can **pause/resume** with `Space`, **scrub time** with `Left`/`Right` arrow keys, **reset** with `R`, or **quit** with `Esc`.
+> When running with `--renderer pygame`, you can **pause/resume** with `Space`, **scrub time** with `Left`/`Right` arrow keys, **reset** with `R`, or **quit** with `Esc`.
 
 ### Map Format
 
@@ -268,9 +273,9 @@ flowchart TD
     H --> I["engine.run()"]
     I --> I1["_init_drones()"]
     I1 --> I2["_plan_routes()\nfor each drone: pathfinder.find_routes()"]
-    I2 --> J{{"--visual flag?"}}
-    J -->|No| K["ConsoleRenderer.run(drones)\nPrint turns to stdout"]
-    J -->|Yes| L["PygameRenderer.run(drones)\nInteractive window"]
+    I2 --> J{{"--renderer pygame?"}}
+    J -->|No| K["CLILogger\nPrint turns to stdout"]
+    J -->|Yes| L["CLILogger + PygameRenderer\nTerminal output + Interactive window"]
 ```
 
 **Step by step:**
@@ -280,7 +285,7 @@ flowchart TD
 3. `PathfinderFactory.create()` picks the algorithm by name (currently only `"coop"`) and injects a fresh `CollisionManager`.
 4. `SimulationEngine` receives the `Network` and `Pathfinder` via its constructor (dependency injection through interfaces).
 5. `engine.run()` creates the drone fleet and plans a route for each drone sequentially. Each planned path is immediately registered in the `CollisionManager`, so the next drone sees updated reservations.
-6. Finally, a `Renderer` (either `ConsoleRenderer` or `PygameRenderer`) visualizes the results.
+6. Finally, a `Renderer` (either `CLILogger` alone, or `CLILogger` + `PygameRenderer`) visualizes the results.
 
 ---
 
@@ -422,13 +427,13 @@ D1-goal
 
 **In-Transit Output:** Notice `D1-a-b` — when a drone travels through a `restricted` zone (2 turns), it is shown as `current_zone-next_zone` to indicate it is mid-transit between two points.
 
-When the Pygame visualizer is enabled, the same turn log is still printed to the terminal.
+When using `--renderer pygame`, the same turn log is still printed to the terminal alongside the interactive window.
 
 ---
 
 ## Visual Representation
 
-The optional Pygame visualizer opens a live window that brings the simulation to life.
+The optional Pygame visualizer (`--renderer pygame`) opens a live window that brings the simulation to life.
 
 **Key features:**
 
