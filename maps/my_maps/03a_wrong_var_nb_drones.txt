@@ -1,0 +1,4 @@
+num_drones: 2
+start_hub: start 0 0
+end_hub: end 1 1
+connection: start-end

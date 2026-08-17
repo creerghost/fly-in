@@ -52,10 +52,16 @@ class Parser:
         except IsADirectoryError:
             raise IsADirectoryError(f"'{self.filepath}' is a directory")
         except ValueError as e:
-            raise ValueError(f"Line {l_num}: {e}")
+            msg = str(e)
+            if msg.startswith("Line "):
+                raise e
+            raise ValueError(f"Line {l_num}: {msg}")
 
         if self._start_hub is None or self._end_hub is None:
             raise ValueError("start_hub and end_hub must be defined")
+
+        if not self._connections:
+            raise ValueError("At least one connection must be defined")
 
         return Network(
             nb_drones=self.nb_drones,
@@ -157,7 +163,12 @@ class Parser:
         try:
             return Zone(**zone_data)
         except ValidationError as e:
-            raise ValueError(f"Invalid zone metadata: {e}")
+            err = e.errors()[0]
+            msg = err['msg']
+            if msg.startswith("Value error, "):
+                msg = msg[len("Value error, "):]
+            field = err.get('loc', ('unknown',))[0]
+            raise ValueError(f"Invalid zone metadata '{field}': {msg}")
 
     def _parse_connection_line(self, line: str) -> Connection:
         """Extract edge data and link capacity from a connection string."""
@@ -182,4 +193,9 @@ class Parser:
         try:
             return Connection(**conn_data)
         except ValidationError as e:
-            raise ValueError(f"Invalid connection metadata: {e}")
+            err = e.errors()[0]
+            msg = err['msg']
+            if msg.startswith("Value error, "):
+                msg = msg[len("Value error, "):]
+            field = err.get('loc', ('unknown',))[0]
+            raise ValueError(f"Invalid connection metadata '{field}': {msg}")

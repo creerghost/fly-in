@@ -1,0 +1,6 @@
+nb_drones: 2
+start_hub: start 0 0 [zone=normal color=green max_drones=1]
+hub: middle 1 0 [zone=priority color=blue max_drones=2]
+end_hub: end 2 0 [zone=normal color=red max_drones=1]
+connection: start-middle [max_link_capacity=1]
+connection: middle-end [max_link_capacity=2]
