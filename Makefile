@@ -18,7 +18,8 @@ PYTHON  = $(UV) run --group dev --active python
 FILE    ?= $(file)
 ARGS    ?= --renderer pygame
 
-.PHONY: install gen_map run debug clean lint lint-strict help
+.PHONY: install gen_map run debug clean lint lint-strict lint-fix help
+
 
 install:
 	@printf "$(CYAN)Syncing dependencies with uv...$(RESET)\n"
@@ -88,6 +89,13 @@ lint-strict:
 	$(PYTHON) -m mypy . --exclude="(\.venv|scripts)" --strict
 	@printf "$(GREEN)Done!$(RESET)\n"
 
+lint-fix:
+	@printf "$(YELLOW)Automatically fixing lint and format errors...\n$(RESET)"
+	$(PYTHON) -m ruff check --select E,W,F,I --fix --line-length 79 . || true
+	$(PYTHON) -m ruff format --line-length 79 .
+	@printf "$(GREEN)Done!$(RESET)\n"
+
+
 help:
 	@printf "============================================================================\n"
 	@printf "Welcome to the Makefile for the project!\n"
@@ -101,7 +109,9 @@ help:
 	@printf "  $(GREEN)clean$(RESET)              - Remove temporary files and caches\n"
 	@printf "  $(GREEN)lint$(RESET)               - Run code linting and type checking\n"
 	@printf "  $(GREEN)lint-strict$(RESET)        - Run strict code linting and type checking\n"
+	@printf "  $(GREEN)lint-fix$(RESET)           - Automatically fix formatting and lint errors\n"
 	@printf "  $(GREEN)help$(RESET)               - Show this help message\n"
+
 	@printf "$(YELLOW)Optional arguments:$(RESET)\n"
 	@printf "  $(BLUE)FILE=path/to/map$(RESET)            - Specify a map file\n"
 	@printf "  $(BLUE)ARGS='--renderer pygame --speed=2.0'$(RESET) - Specify additional arguments\n"

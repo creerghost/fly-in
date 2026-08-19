@@ -1,15 +1,15 @@
 """Main application entry point for the simulation."""
 
 import sys
+from typing import Any
 
 from pydantic import ValidationError
 
+from ..algorithm import CollisionManager, CooperativeAStar
+from ..models import Drone
+from ..parsers import Parser, parse_args
+from ..renderer import CLILogger, PygameRenderer
 from .controller import SimulationController
-from ..algorithm import PathfinderFactory
-from ..engine import SimulationEngine
-from ..interfaces import Engine, Pathfinder, Renderer
-from ..parsers import ArgParser, Parser
-from ..renderer import RendererFactory
 
 
 class Application:
@@ -18,26 +18,34 @@ class Application:
     @staticmethod
     def run() -> None:
         """Run the simulation application."""
-        renderers: list[Renderer] = []
+        renderers: list[Any] = []
         try:
-            args = ArgParser.parse()
-            parser = Parser(args.filename)
-            network = parser.parse()
+            args = parse_args()
+            network = Parser(args.filename).parse()
 
-            pathfinder: Pathfinder = PathfinderFactory.create(
-                args.algo, network
+            if network.start_hub is None or network.end_hub is None:
+                raise ValueError("Start and end hubs must be defined")
+
+            drones = Drone.create_fleet(
+                network.nb_drones, network.start_hub.name
             )
+            pathfinder = CooperativeAStar(network, CollisionManager())
+            for drone in drones:
+                path = pathfinder.find_routes(
+                    drone.current_location, network.end_hub.name
+                )
+                if path is None:
+                    raise ValueError(
+                        f"No valid path found for drone {drone.id}"
+                    )
+                drone.path = path
 
-            engine: Engine = SimulationEngine(network, pathfinder)
-            engine.run()
-
-            renderers = RendererFactory.create(
-                args.renderer, network, args.speed
-            )
+            renderers = [CLILogger()]
+            if args.renderer == "pygame":
+                renderers.append(PygameRenderer(network, args.speed))
 
             controller = SimulationController(
-                network=network,
-                drones=engine.drones,
+                drones=drones,
                 renderers=renderers,
                 play_speed=args.speed,
             )
@@ -45,13 +53,11 @@ class Application:
 
         except ValidationError as e:
             error = e.errors()[0]
-            msg = error['msg']
-            if msg.startswith("Value error, "):
-                msg = msg[len("Value error, "):]
+            msg = error["msg"]
+            msg = msg.removeprefix("Value error, ")
 
-            loc = error.get('loc', ())
-            # ignore root model validations which don't have a specific field
-            if loc and loc[0] != '__root__':
+            loc = error.get("loc", ())
+            if loc and loc[0] != "__root__":
                 loc_str = " -> ".join(str(x) for x in loc)
                 print(f"Error in '{loc_str}': {msg}")
             else:

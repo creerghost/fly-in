@@ -2,9 +2,9 @@
 
 import sys
 import time
+from typing import Any
 
-from ..interfaces import InteractiveRenderer, Renderer
-from ..models import Drone, Network
+from ..models import Drone
 
 
 class SimulationController:
@@ -16,13 +16,11 @@ class SimulationController:
 
     def __init__(
         self,
-        network: Network,
         drones: list[Drone],
-        renderers: list[Renderer],
+        renderers: list[Any],
         play_speed: float = 1.0,
     ) -> None:
         """Initialize the simulation controller."""
-        self.network = network
         self.drones = drones
         self.renderers = renderers
         self.play_speed = play_speed
@@ -45,8 +43,7 @@ class SimulationController:
         last_time = time.time()
 
         has_interactive_renderer = any(
-            isinstance(r, InteractiveRenderer)
-            for r in self.renderers
+            hasattr(r, "handle_events") for r in self.renderers
         )
 
         if not has_interactive_renderer:
@@ -78,7 +75,7 @@ class SimulationController:
     def _handle_events(self, dt: float) -> None:
         """Gather commands from interactive renderers and process them."""
         for r in self.renderers:
-            if not isinstance(r, InteractiveRenderer):
+            if not hasattr(r, "handle_events"):
                 continue
 
             commands = r.handle_events(dt)

@@ -36,7 +36,9 @@ class HudStats:
 
     @classmethod
     def from_drones(
-        cls, drones: list["Drone"], network: "Network",
+        cls,
+        drones: list["Drone"],
+        network: "Network",
         current_time: float,
     ) -> "HudStats":
         """Compute all HUD statistics based on planned drone paths."""

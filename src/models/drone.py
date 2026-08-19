@@ -1,15 +1,6 @@
-"""Drone models and status enumeration."""
+"""Drone models for the simulation."""
 
 from dataclasses import dataclass, field
-from enum import Enum
-
-
-class DroneStatus(str, Enum):
-    """Enumeration of possible drone execution states."""
-
-    WAITING = "waiting"
-    IN_FLIGHT = "in_flight"
-    FINISHED = "finished"
 
 
 @dataclass(slots=True)
@@ -17,28 +8,20 @@ class Drone:
     """
     Represent a single drone entity in the simulation.
 
-    Holds its unique ID, current status, and full planned path.
+    Holds its unique ID and full planned path.
     """
 
     id: str
     current_location: str
     path: list[tuple[str, int]] = field(default_factory=list)
-    status: DroneStatus = field(default=DroneStatus.WAITING)
-    _draw_pos: tuple[float, float] = field(default=(0.0, 0.0))
-    _prev_pos: tuple[float, float] = field(default=(0.0, 0.0))
-    _next_pos: tuple[float, float] = field(default=(0.0, 0.0))
-    _animation_ready: bool = field(default=False)
 
     def __str__(self) -> str:
         """Return a string representation of the drone."""
-        return f"{self.id} @ {self.current_location} ({self.status.name})"
+        return f"{self.id} @ {self.current_location}"
 
     def __repr__(self) -> str:
         """Return a detailed string representation of the drone."""
-        return (
-            f"Drone('{self.id}', loc='{self.current_location}', "
-            f"status='{self.status.name}')"
-        )
+        return f"Drone('{self.id}', loc='{self.current_location}')"
 
     @classmethod
     def create_fleet(cls, count: int, start_location: str) -> list["Drone"]:
@@ -61,9 +44,7 @@ class Drone:
                     return f"{curr_zone}-{next_zone}"
         return self.path[-1][0]
 
-    def get_render_state(
-        self, t: float
-    ) -> tuple[str, str, float, bool]:
+    def get_render_state(self, t: float) -> tuple[str, str, float, bool]:
         """
         Determine the logical render state at time t.
 

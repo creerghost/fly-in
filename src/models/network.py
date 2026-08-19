@@ -62,7 +62,8 @@ class Network(BaseModel):
             pair: tuple[str, str] = (s[0], s[1])
             if pair in seen_cons:
                 raise ValueError(
-                    f"Connection already exists: {con.name1}-{con.name2}")
+                    f"Connection already exists: {con.name1}-{con.name2}"
+                )
             seen_cons.add(pair)
             if con.name1 not in zones or con.name2 not in zones:
                 raise ValueError(
@@ -70,7 +71,8 @@ class Network(BaseModel):
                 )
             if con.name1 == con.name2:
                 raise ValueError(
-                    f"Connection to same zone: {con.name1}-{con.name2}")
+                    f"Connection to same zone: {con.name1}-{con.name2}"
+                )
         return self
 
     def model_post_init(self, __context: Any) -> None:
@@ -98,9 +100,11 @@ class Network(BaseModel):
 
         for con in self.connections:
             self.neighboring_zones[con.name1].append(
-                (self.zones[con.name2], con))
+                (self.zones[con.name2], con)
+            )
             self.neighboring_zones[con.name2].append(
-                (self.zones[con.name1], con))
+                (self.zones[con.name1], con)
+            )
 
         self._check_connectivity()
 

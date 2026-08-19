@@ -3,34 +3,20 @@
 import argparse
 
 
-class ArgParser:
-    """Parser wrapper for command line arguments."""
-
-    @staticmethod
-    def parse() -> argparse.Namespace:
-        """Parse arguments and return a namespace."""
-        argparser = argparse.ArgumentParser(
-            description="Fly-in Drone Simulator"
-        )
-        argparser.add_argument("filename", help="Path to the map file")
-        argparser.add_argument(
-            "--renderer",
-            type=str,
-            choices=["cli", "pygame"],
-            default="cli",
-            help="Select the renderer to use",
-        )
-        argparser.add_argument(
-            "--speed",
-            type=float,
-            default=1,
-            help="Set up the speed of the animation",
-        )
-        argparser.add_argument(
-            "--algo",
-            type=str,
-            choices=["coop"],
-            default="coop",
-            help="Select the pathfinding algorithm to use",
-        )
-        return argparser.parse_args()
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Fly-in Drone Simulator")
+    parser.add_argument("filename", help="Path to the map file")
+    parser.add_argument(
+        "--renderer",
+        choices=["cli", "pygame"],
+        default="cli",
+        help="Select the renderer to use",
+    )
+    parser.add_argument(
+        "--speed",
+        type=float,
+        default=1.0,
+        help="Set up the speed of the animation",
+    )
+    return parser.parse_args()

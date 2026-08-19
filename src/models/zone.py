@@ -52,7 +52,8 @@ class Zone(BaseModel):
         """
         if "-" in self.name:
             raise ValueError(
-                f"Zone name should not contain dashes: {self.name}")
+                f"Zone name should not contain dashes: {self.name}"
+            )
         return self
 
     @property

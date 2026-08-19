@@ -1,6 +1,7 @@
 """Making a package."""
 
 import os
+
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 # pyrefly: ignore [missing-import]

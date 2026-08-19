@@ -1,5 +1,5 @@
 """Pathfinding algorithms for the simulation."""
 
-from .factory import PathfinderFactory
+from .coop_a_star import CollisionManager, CooperativeAStar
 
-__all__ = ["PathfinderFactory"]
+__all__ = ["CollisionManager", "CooperativeAStar"]

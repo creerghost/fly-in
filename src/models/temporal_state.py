@@ -14,7 +14,6 @@ class TemporalState:
     """
 
     f_cost: float
-    move_penalty: int
     g_cost: float = field(compare=False)
     h_cost: float = field(compare=False)
     turn: int = field(compare=False)

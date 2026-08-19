@@ -1,14 +1,18 @@
-name: Auto Lint Fix
+name: CI
 
 on:
   push:
     branches:
       - main
       - master
+  pull_request:
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
-  auto-fix-lint:
+  lint-and-test:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,6 +25,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
+          enable-cache: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,14 +35,17 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
-      - name: Run Auto Lint Fixer
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: uv run python scripts/auto_lint_fixer.py
+      - name: Auto-fix lint and formatting
+        run: make lint-fix
 
-      - name: Commit and Push Fixes
-        if: always()
+      - name: Commit and push fixes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Automated linting fixes"
-          branch: ${{ github.ref }}
+          commit_message: "style: auto-fix lint and formatting errors"
+          branch: ${{ github.head_ref || github.ref_name }}
+
+      - name: Strict Lint and Type Check
+        run: make lint-strict
+
+      - name: Run Test Simulation
+        run: make gen_map ARGS="--renderer cli"

@@ -2,11 +2,10 @@
 
 from collections import defaultdict
 
-from ...interfaces import Manager
 
-
-class CollisionManager(Manager):
+class CollisionManager:
     """
+
     Maintain a schedule of zone and link capacities per turn.
 
     Prevents collisions and enforces capacities.
@@ -15,9 +14,9 @@ class CollisionManager(Manager):
     def __init__(self) -> None:
         """Initialize empty schedules for zones and links."""
         self.zone_schedule: dict[tuple[str, int], int] = defaultdict(int)
-        self.link_schedule: dict[
-            tuple[tuple[str, str], int], int
-        ] = defaultdict(int)
+        self.link_schedule: dict[tuple[tuple[str, str], int], int] = (
+            defaultdict(int)
+        )
 
     @staticmethod
     def _normalize_link(zone1: str, zone2: str) -> tuple[str, str]:

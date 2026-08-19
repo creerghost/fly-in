@@ -75,16 +75,15 @@ class Parser:
         """Parse an individual line from the configuration file."""
         if line.startswith("nb_drones"):
             if self.nb_drones:
-                raise ValueError(
-                    f"Line {line_num}: nb_drones already defined"
-                )
+                raise ValueError(f"Line {line_num}: nb_drones already defined")
             drones = line.split(":")
             if len(drones) != 2 or not drones[1].strip().isdigit():
                 raise ValueError(f"Line {line_num}: Invalid nb_drones format")
             self.nb_drones = int(drones[1].strip())
             if self.nb_drones <= 0:
                 raise ValueError(
-                    f"Line {line_num}: nb_drones must be positive")
+                    f"Line {line_num}: nb_drones must be positive"
+                )
         elif line.startswith("start_hub:"):
             self._start_hub_count += 1
             self._start_hub = self._parse_zone_line(
@@ -93,13 +92,15 @@ class Parser:
         elif line.startswith("end_hub:"):
             self._end_hub_count += 1
             self._end_hub = self._parse_zone_line(
-                line.replace("end_hub:", "").strip())
+                line.replace("end_hub:", "").strip()
+            )
         elif line.startswith("hub:"):
             hub = self._parse_zone_line(line.replace("hub:", "").strip())
             self._hubs.append(hub)
         elif line.startswith("connection:"):
             conn = self._parse_connection_line(
-                line.replace("connection:", "").strip())
+                line.replace("connection:", "").strip()
+            )
 
             defined_zones = {h.name for h in self._hubs}
             if self._start_hub:
@@ -116,7 +117,8 @@ class Parser:
             self._connections.append(conn)
         else:
             raise ValueError(
-                f"Line {line_num}: Unknown syntax on line '{line}'")
+                f"Line {line_num}: Unknown syntax on line '{line}'"
+            )
 
     @staticmethod
     def _parse_metadata(line: str) -> tuple[str, dict[str, str]]:
@@ -164,10 +166,9 @@ class Parser:
             return Zone(**zone_data)
         except ValidationError as e:
             err = e.errors()[0]
-            msg = err['msg']
-            if msg.startswith("Value error, "):
-                msg = msg[len("Value error, "):]
-            field = err.get('loc', ('unknown',))[0]
+            msg = err["msg"]
+            msg = msg.removeprefix("Value error, ")
+            field = err.get("loc", ("unknown",))[0]
             raise ValueError(f"Invalid zone metadata '{field}': {msg}")
 
     def _parse_connection_line(self, line: str) -> Connection:
@@ -194,8 +195,7 @@ class Parser:
             return Connection(**conn_data)
         except ValidationError as e:
             err = e.errors()[0]
-            msg = err['msg']
-            if msg.startswith("Value error, "):
-                msg = msg[len("Value error, "):]
-            field = err.get('loc', ('unknown',))[0]
+            msg = err["msg"]
+            msg = msg.removeprefix("Value error, ")
+            field = err.get("loc", ("unknown",))[0]
             raise ValueError(f"Invalid connection metadata '{field}': {msg}")
